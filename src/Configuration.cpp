@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include <ArduinoJson.hpp>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <FastCRC.h>
 #include <WiFi.h>
 #include <cstdio>
@@ -144,14 +144,14 @@ auto Configuration::serialize( ArduinoJson::JsonVariant& json ) const -> void
         json["wind_direction"]["threshoulds"]["sul"]["max"] = this->windDirection.threshoulds.at("Sul").second;
     }
     {
-        json["rain_intensity"]["threshoulds"]["seco"]["min"] = this->windDirection.threshoulds.at("Seco").first;
-        json["rain_intensity"]["threshoulds"]["seco"]["max"] = this->windDirection.threshoulds.at("Seco").second;
-        json["rain_intensity"]["threshoulds"]["umido"]["min"] = this->windDirection.threshoulds.at("Umido").first;
-        json["rain_intensity"]["threshoulds"]["umido"]["max"] = this->windDirection.threshoulds.at("Umido").second;
-        json["rain_intensity"]["threshoulds"]["chuvoso"]["min"] = this->windDirection.threshoulds.at("Chuvoso").first;
-        json["rain_intensity"]["threshoulds"]["chuvoso"]["max"] = this->windDirection.threshoulds.at("Chuvoso").second;
-        json["rain_intensity"]["threshoulds"]["tempestade"]["min"] = this->windDirection.threshoulds.at("Tempestade").first;
-        json["rain_intensity"]["threshoulds"]["tempestade"]["max"] = this->windDirection.threshoulds.at("Tempestade").second;
+        json["rain_intensity"]["threshoulds"]["seco"]["min"] = this->rainIntensity.threshoulds.at("Seco").first;
+        json["rain_intensity"]["threshoulds"]["seco"]["max"] = this->rainIntensity.threshoulds.at("Seco").second;
+        json["rain_intensity"]["threshoulds"]["umido"]["min"] = this->rainIntensity.threshoulds.at("Umido").first;
+        json["rain_intensity"]["threshoulds"]["umido"]["max"] = this->rainIntensity.threshoulds.at("Umido").second;
+        json["rain_intensity"]["threshoulds"]["chuvoso"]["min"] = this->rainIntensity.threshoulds.at("Chuvoso").first;
+        json["rain_intensity"]["threshoulds"]["chuvoso"]["max"] = this->rainIntensity.threshoulds.at("Chuvoso").second;
+        json["rain_intensity"]["threshoulds"]["tempestade"]["min"] = this->rainIntensity.threshoulds.at("Tempestade").first;
+        json["rain_intensity"]["threshoulds"]["tempestade"]["max"] = this->rainIntensity.threshoulds.at("Tempestade").second;
     }
 }
 
@@ -208,32 +208,32 @@ auto Configuration::deserialize( const ArduinoJson::JsonVariant& json ) -> void
         this->windSpeed.radius = json["wind_speed"]["radius"] | 1.0;
     }
     {
-        this->windDirection.threshoulds["Leste"].first = json["wind_direction"]["threshoulds"]["leste"]["min"];
-        this->windDirection.threshoulds["Leste"].second = json["wind_direction"]["threshoulds"]["leste"]["max"];
-        this->windDirection.threshoulds["Nordeste"].first = json["wind_direction"]["threshoulds"]["nordeste"]["min"];
-        this->windDirection.threshoulds["Nordeste"].second = json["wind_direction"]["threshoulds"]["nordeste"]["max"];
-        this->windDirection.threshoulds["Noroeste"].first = json["wind_direction"]["threshoulds"]["noroeste"]["min"];
-        this->windDirection.threshoulds["Noroeste"].second = json["wind_direction"]["threshoulds"]["noroeste"]["max"];
-        this->windDirection.threshoulds["Norte"].first = json["wind_direction"]["threshoulds"]["norte"]["min"];
-        this->windDirection.threshoulds["Norte"].second = json["wind_direction"]["threshoulds"]["norte"]["max"];
-        this->windDirection.threshoulds["Oeste"].first = json["wind_direction"]["threshoulds"]["oeste"]["min"];
-        this->windDirection.threshoulds["Oeste"].second = json["wind_direction"]["threshoulds"]["oeste"]["max"];
-        this->windDirection.threshoulds["Sudeste"].first = json["wind_direction"]["threshoulds"]["sudeste"]["min"];
-        this->windDirection.threshoulds["Sudeste"].second = json["wind_direction"]["threshoulds"]["sudeste"]["max"];        
-        this->windDirection.threshoulds["Sudoeste"].first = json["wind_direction"]["threshoulds"]["sudoeste"]["min"];
-        this->windDirection.threshoulds["Sudoeste"].second = json["wind_direction"]["threshoulds"]["sudoeste"]["max"];
-        this->windDirection.threshoulds["Sul"].first = json["wind_direction"]["threshoulds"]["sul"]["min"];
-        this->windDirection.threshoulds["Sul"].second = json["wind_direction"]["threshoulds"]["sul"]["max"];
+        this->windDirection.threshoulds["Leste"].first = json["wind_direction"]["threshoulds"]["leste"]["min"] | 0;
+        this->windDirection.threshoulds["Leste"].second = json["wind_direction"]["threshoulds"]["leste"]["max"] | 0;
+        this->windDirection.threshoulds["Nordeste"].first = json["wind_direction"]["threshoulds"]["nordeste"]["min"] | 0;
+        this->windDirection.threshoulds["Nordeste"].second = json["wind_direction"]["threshoulds"]["nordeste"]["max"] | 0;
+        this->windDirection.threshoulds["Noroeste"].first = json["wind_direction"]["threshoulds"]["noroeste"]["min"] | 0;
+        this->windDirection.threshoulds["Noroeste"].second = json["wind_direction"]["threshoulds"]["noroeste"]["max"] | 0;
+        this->windDirection.threshoulds["Norte"].first = json["wind_direction"]["threshoulds"]["norte"]["min"] | 0;
+        this->windDirection.threshoulds["Norte"].second = json["wind_direction"]["threshoulds"]["norte"]["max"] | 0;
+        this->windDirection.threshoulds["Oeste"].first = json["wind_direction"]["threshoulds"]["oeste"]["min"] | 0;
+        this->windDirection.threshoulds["Oeste"].second = json["wind_direction"]["threshoulds"]["oeste"]["max"] | 0;
+        this->windDirection.threshoulds["Sudeste"].first = json["wind_direction"]["threshoulds"]["sudeste"]["min"] | 0;
+        this->windDirection.threshoulds["Sudeste"].second = json["wind_direction"]["threshoulds"]["sudeste"]["max"] | 0;        
+        this->windDirection.threshoulds["Sudoeste"].first = json["wind_direction"]["threshoulds"]["sudoeste"]["min"] | 0;
+        this->windDirection.threshoulds["Sudoeste"].second = json["wind_direction"]["threshoulds"]["sudoeste"]["max"] | 0;
+        this->windDirection.threshoulds["Sul"].first = json["wind_direction"]["threshoulds"]["sul"]["min"] | 0;
+        this->windDirection.threshoulds["Sul"].second = json["wind_direction"]["threshoulds"]["sul"]["max"] | 0;
     }
     {
-        this->windDirection.threshoulds["Seco"].first = json["rain_intensity"]["threshoulds"]["seco"]["min"];
-        this->windDirection.threshoulds["Seco"].second = json["rain_intensity"]["threshoulds"]["seco"]["max"];
-        this->windDirection.threshoulds["Umido"].first = json["rain_intensity"]["threshoulds"]["umido"]["min"];
-        this->windDirection.threshoulds["Umido"].second = json["rain_intensity"]["threshoulds"]["umido"]["max"];
-        this->windDirection.threshoulds["Chuvoso"].first = json["rain_intensity"]["threshoulds"]["chuvoso"]["min"];
-        this->windDirection.threshoulds["Chuvoso"].second = json["rain_intensity"]["threshoulds"]["chuvoso"]["max"];
-        this->windDirection.threshoulds["Tempestade"].first = json["rain_intensity"]["threshoulds"]["tempestade"]["min"];
-        this->windDirection.threshoulds["Tempestade"].second = json["rain_intensity"]["threshoulds"]["tempestade"]["max"];
+        this->rainIntensity.threshoulds["Seco"].first = json["rain_intensity"]["threshoulds"]["seco"]["min"] | 0;
+        this->rainIntensity.threshoulds["Seco"].second = json["rain_intensity"]["threshoulds"]["seco"]["max"] | 0;
+        this->rainIntensity.threshoulds["Umido"].first = json["rain_intensity"]["threshoulds"]["umido"]["min"] | 0;
+        this->rainIntensity.threshoulds["Umido"].second = json["rain_intensity"]["threshoulds"]["umido"]["max"] | 0;
+        this->rainIntensity.threshoulds["Chuvoso"].first = json["rain_intensity"]["threshoulds"]["chuvoso"]["min"] | 0;
+        this->rainIntensity.threshoulds["Chuvoso"].second = json["rain_intensity"]["threshoulds"]["chuvoso"]["max"] | 0;
+        this->rainIntensity.threshoulds["Tempestade"].first = json["rain_intensity"]["threshoulds"]["tempestade"]["min"] | 0;
+        this->rainIntensity.threshoulds["Tempestade"].second = json["rain_intensity"]["threshoulds"]["tempestade"]["max"] | 0;
     }
 }
 
@@ -243,13 +243,13 @@ auto Configuration::load( Configuration* cfg ) -> void
 
     *cfg = defaultCfg;
 
-    if ( not SPIFFS.exists( "/configuration.json" ) )
+    if ( not LittleFS.exists( "/configuration.json" ) )
     {
         log_d( "file not found" );
     }
     else
     {
-        auto file{SPIFFS.open( "/configuration.json", FILE_READ )};
+        auto file{LittleFS.open( "/configuration.json", FILE_READ )};
         if ( not file )
         {
             log_e( "file error" );
@@ -281,7 +281,7 @@ auto Configuration::save( const Configuration& cfg ) -> void
 {
     log_d( "begin" );
 
-    auto file{SPIFFS.open( "/configuration.json", FILE_WRITE )};
+    auto file{LittleFS.open( "/configuration.json", FILE_WRITE )};
     if ( not file )
     {
         log_e( "file error" );

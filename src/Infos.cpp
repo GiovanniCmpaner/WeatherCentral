@@ -24,8 +24,8 @@ namespace Infos
     static float humidity = NAN;
     static float windSpeed = NAN;
 
-    static std::pair<std::string, ResponsiveAnalogRead> windDirection = {"N/A", {Peripherals::WIND_DIRECTION, false}};
-    static std::pair<std::string, ResponsiveAnalogRead> rainIntensity = {"N/A", {Peripherals::RAIN_INTENSITY, false}};
+    static std::pair<std::string, ResponsiveAnalogRead> windDirection = {"N/A", {}};
+    static std::pair<std::string, ResponsiveAnalogRead> rainIntensity = {"N/A", {}};
 
     static auto update() -> void
     {
@@ -55,6 +55,16 @@ namespace Infos
         return ( round( windSpeed * 100 ) / 100 );
     }
 
+    auto getWindDirection() -> std::string
+    {
+        return "N/A";
+    }
+
+    auto getRainIntensity() -> std::string
+    {
+        return "N/A";
+    }
+
     auto init() -> void
     {
         if( not bme.begin() )
@@ -62,7 +72,13 @@ namespace Infos
             log_d( "bme error" );
         }
 
-        attachInterrupt(Peripherals::WIND_SPEED, nullptr, FALLING);
+        //attachInterrupt(Peripherals::WIND_SPEED, nullptr, FALLING);
+
+        windDirection.second.begin(Peripherals::WIND_DIRECTION, false);
+        windDirection.second.setAnalogResolution(4096);
+
+        rainIntensity.second.begin(Peripherals::RAIN_INTENSITY, false);
+        rainIntensity.second.setAnalogResolution(4096);
     }
 
     auto process() -> void

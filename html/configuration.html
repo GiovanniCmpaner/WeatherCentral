@@ -61,6 +61,68 @@
       <input type="submit" value="Save">
     </fieldset>
   </form>
+  <form id="wind_direction">
+    <fieldset>
+      <legend>Wind Direction</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Min</th>
+            <th>Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template id="wind_direction_template">
+            <tr>
+              <td>
+                <span id="wind_direction_name">Norte</span>
+              </td>
+              <td>
+                <input type="number" id="wind_direction_min" step="any" required>
+              </td>
+              <td>
+                <input type="number" id="wind_direction_max" step="any" required>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+        
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
+  <form id="rain_intensity">
+    <fieldset>
+      <legend>Rain Intensity</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Min</th>
+            <th>Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template id="rain_intensity_template">
+            <tr>
+              <td>
+                <span id="rain_intensity_name">Norte</span>
+              </td>
+              <td>
+                <input type="number" id="rain_intensity_min" step="any" required>
+              </td>
+              <td>
+                <input type="number" id="rain_intensity_max" step="any" required>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+        
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
   <form id="access_point">
     <fieldset>
       <legend> Access Point </legend>

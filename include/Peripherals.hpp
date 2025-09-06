@@ -13,24 +13,26 @@ namespace Peripherals
             SDA = 21,
             SCL = 22
         };
-        static constexpr uint8_t I2C_ADDRESS{0x76};
+        static constexpr uint8_t I2C_ADDRESS = 0x76;
     }; // namespace BME280
 
     namespace DS3231
     {
         enum Pins
         {
-            SQW_INT = 34,
             SCL = 22,
             SDA = 21
         };
-        static constexpr uint8_t I2C_ADDRESS{0x68};
+        static constexpr uint8_t I2C_ADDRESS = 0x68;
     }; // namespace DS3231
 
     enum Pins
     {
-        BTN = 4,
         LED_HTB = 16,
+
+        WIND_SPEED = 23,
+        WIND_DIRECTION = 24,
+        RAIN_INTENSITY = 25,
     };
 
     auto init() -> void;

@@ -4,7 +4,7 @@
 #include <esp32-hal.h>
 #include <esp_sleep.h>
 #include <esp_pthread.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <HTTPClient.h>
 
 #include "Configuration.hpp"

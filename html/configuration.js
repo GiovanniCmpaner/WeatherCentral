@@ -5,6 +5,14 @@ $(document).ready(() => {
 });
 
 function handleConfiguration() {
+
+    $("#datetime").submit((event) => {
+        event.preventDefault();
+        if ($("#datetime")[0].checkValidity()) {
+            setDateTime().then(() => clearMessage());
+        }
+    });
+
     $("#wind_speed").submit((event) => {
         event.preventDefault();
         if ($("#wind_speed")[0].checkValidity()) {
@@ -12,10 +20,10 @@ function handleConfiguration() {
         }
     });
 
-    $("#datetime").submit((event) => {
+    $("#wind_direction").submit((event) => {
         event.preventDefault();
-        if ($("#datetime")[0].checkValidity()) {
-            setDateTime().then(() => clearMessage());
+        if ($("#wind_direction")[0].checkValidity()) {
+            setWindDirection().then(() => clearMessage());
         }
     });
 
@@ -64,27 +72,42 @@ function setDateTime() {
     return deferred.promise();
 }
 
-function setSensors() {
+function setWindSpeed() {
     var cfg = {
-        sensors: []
+        wind_speed: {
+            radius: parseFloat($("#wind_speed_radius").prop("value"))
+        }
+    };
+    return setConfiguration(cfg);
+}
+
+function setWindDirection() {
+    var cfg = {
+        wind_direction: []
     };
 
-    $("#sensors tbody tr").each((i, s) => {
-        cfg.sensors.push({
-            enabled: $(`#sensor_enabled_${i}`).prop("checked"),
-            name: $(`#sensor_name_${i}`).prop("value"),
-            type: parseInt($(`#sensor_type_${i}`).prop("value")),
-            min: parseFloat($(`#sensor_min_${i}`).prop("value")),
-            max: parseFloat($(`#sensor_max_${i}`).prop("value")),
-            calibration: {
-                factor: parseFloat($(`#sensor_calibration_radius_${i}`).prop("value")),
-                offset: parseFloat($(`#sensor_calibration_linear_coefficient_${i}`).prop("value"))
-            },
-            alarm: {
-                enabled: $(`#sensor_alarm_enabled_${i}`).prop("checked"),
-                value: parseFloat($(`#sensor_alarm_value_${i}`).prop("value"))
-            }
-        });
+    $("#wind_direction tbody tr").each((i, s) => {
+        var name = $(`#wind_direction_name_${i}`).prop("value");
+        cfg.wind_direction[name] = {
+            min: parseFloat($(`#wind_direction_min_${i}`).prop("value")),
+            max: parseFloat($(`#wind_direction_max_${i}`).prop("value")),
+        }
+    });
+
+    return setConfiguration(cfg);
+}
+
+function setRainIntensity() {
+    var cfg = {
+        rain_intensity: []
+    };
+
+    $("#rain_intensity tbody tr").each((i, s) => {
+        var name = $(`#rain_intensity_name_${i}`).prop("value");
+        cfg.rain_intensity[name] = {
+            min: parseFloat($(`#rain_intensity_min_${i}`).prop("value")),
+            max: parseFloat($(`#rain_intensity_max_${i}`).prop("value")),
+        }
     });
 
     return setConfiguration(cfg);
@@ -183,29 +206,46 @@ function getConfiguration() {
             $("#station_user").prop("value", cfg.station.user);
             $("#station_password").prop("value", cfg.station.password);
 
-            var template = $($.parseHTML($("#sensor_template").html()));
-            for (const [i, s] of cfg.sensors.entries()) {
-                var row = template.clone();
-                row.find("#sensor_number").text(i + 1);
-                row.find("#sensor_enabled").prop("checked", s.enabled);
-                row.find("#sensor_name").prop("value", s.name);
-                row.find("#sensor_type").prop("value", s.type);
-                row.find("#sensor_min").prop("value", s.min);
-                row.find("#sensor_max").prop("value", s.max);
-                row.find("#sensor_calibration_radius").prop("value", s.calibration.radius);
-                row.find("#sensor_calibration_linear_coefficient").prop("value", s.calibration.linear_coefficient);
-                row.find("#sensor_alarm_enabled").prop("checked", s.alarm.enabled);
-                row.find("#sensor_alarm_value").prop("value", s.alarm.value);
-                for (var c of row.find("*")) {
-                    if (c.id) {
-                        c.id += `_${i}`;
+            $("#wind_speed_radius").prop("value", cfg.wind_speed.radius);
+            
+            {
+                var template = $($.parseHTML($("#wind_direction_template").html()));
+                for (const [i, s] of cfg.wind_direction.entries()) {
+                    var row = template.clone();
+                    row.find("#wind_direction_name").text(i);
+                    row.find("#wind_direction_min").prop("value", s.min);
+                    row.find("#wind_direction_max").prop("value", s.max);
+                    for (var c of row.find("*")) {
+                        if (c.id) {
+                            c.id += `_${i}`;
+                        }
+                        if (c.htmlFor) {
+                            c.htmlFor += `_${i}`;
+                        }
                     }
-                    if (c.htmlFor) {
-                        c.htmlFor += `_${i}`;
-                    }
+                    row.appendTo($("#wind_direction table tbody"));
                 }
-                row.appendTo($("#sensors table tbody"));
             }
+
+            {
+                var template = $($.parseHTML($("#rain_intensity_template").html()));
+                for (const [i, s] of cfg.rain_intensity.entries()) {
+                    var row = template.clone();
+                    row.find("#rain_intensity_name").text(i);
+                    row.find("#rain_intensity_min").prop("value", s.min);
+                    row.find("#rain_intensity_max").prop("value", s.max);
+                    for (var c of row.find("*")) {
+                        if (c.id) {
+                            c.id += `_${i}`;
+                        }
+                        if (c.htmlFor) {
+                            c.htmlFor += `_${i}`;
+                        }
+                    }
+                    row.appendTo($("#rain_intensity table tbody"));
+                }
+            }
+
             successMessage("Done");
             deferred.resolve();
         })

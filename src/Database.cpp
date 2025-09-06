@@ -16,7 +16,7 @@
 
 namespace Database
 {
-    static sqlite3* db{};
+    static sqlite3* db = nullptr;
 
     auto SensorData::serialize( ArduinoJson::JsonVariant& json ) const -> void
     {
@@ -51,12 +51,12 @@ namespace Database
 
         sqlite3_initialize();
 
-        const auto rc{sqlite3_open( "/spiffs/sensors_data.db", &db )};
+        const auto rc = sqlite3_open( "/littlefs/sensors_data.db", &db );
         if ( rc != SQLITE_OK )
         {
             log_e( "database open error: %s\n", sqlite3_errmsg( db ) );
             std::abort();
-        };
+        }
 
         log_d( "end" );
     }
@@ -65,19 +65,19 @@ namespace Database
     {
         log_d( "begin" );
         {
-            const auto query{"CREATE TABLE IF NOT EXISTS                   "
-                             "    SENSORS_DATA (                           "
-                             "        ID              INTEGER PRIMARY KEY, "
-                             "        DATE_TIME       DATETIME,            "
-                             "        TEMPERATURE     NUMERIC,             "
-                             "        HUMIDITY        NUMERIC,             "
-                             "        PRESSURE        NUMERIC,             "
-                             "        WIND_SPEED      NUMERIC,             "
-                             "        WIND_DIRECTION  TEXT,                "
-                             "        RAIN_INTENSITY  TEXT                 "
-                             "    )                                        "};
+            const auto query = "CREATE TABLE IF NOT EXISTS                   "
+                               "    SENSORS_DATA (                           "
+                               "        ID              INTEGER PRIMARY KEY, "
+                               "        DATE_TIME       DATETIME,            "
+                               "        TEMPERATURE     NUMERIC,             "
+                               "        HUMIDITY        NUMERIC,             "
+                               "        PRESSURE        NUMERIC,             "
+                               "        WIND_SPEED      NUMERIC,             "
+                               "        WIND_DIRECTION  TEXT,                "
+                               "        RAIN_INTENSITY  TEXT                 "
+                               "    )                                        ";
 
-            const auto rc{sqlite3_exec( db, query, nullptr, nullptr, nullptr )};
+            const auto rc = sqlite3_exec( db, query, nullptr, nullptr, nullptr );
             if ( rc != SQLITE_OK )
             {
                 log_e( "table create error: %s\n", sqlite3_errmsg( db ) );
@@ -128,7 +128,7 @@ namespace Database
         sqlite3_bind_double( res, 4, sensorData.pressure );
         sqlite3_bind_double( res, 5, sensorData.windSpeed );
         sqlite3_bind_text( res, 6, sensorData.windDirection.c_str(), sensorData.windDirection.size(), SQLITE_TRANSIENT);
-        sqlite3_bind_text( res, 7, sensorData.rainIntensity.c_str(), sensorData.windDirection.size(), SQLITE_TRANSIENT);
+        sqlite3_bind_text( res, 7, sensorData.rainIntensity.c_str(), sensorData.rainIntensity.size(), SQLITE_TRANSIENT);
         if ( sqlite3_step( res ) != SQLITE_DONE )
         {
             log_d( "insert error: %s", sqlite3_errmsg( db ) );
