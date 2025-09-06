@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="jquery.min.js"></script>
+  <script src="infos.js"></script>
+  <title>WeatherCentral - Infos</title>
+</head>
+
+<body id="infos">
+  <nav id="message"></nav>
+  <nav id="menu">
+    <a href="/configuration.html">Configuration</a>
+    <a href="/infos.html">Infos</a>
+    <a href="/data.html">Data</a>
+  </nav>
+  <h2> Infos </h2>
+  <fieldset>
+    <legend> Environment </legend>
+    <table id="environment">
+      <tbody>
+        <tr>
+          <td> <label for="temperature"> Temperature (°C) </label> </td>
+          <td> <span id="temperature"></span> </td>
+        </tr>
+        <tr>
+          <td> <label for="humidity"> Humidity (%) </label> </td>
+          <td> <span id="humidity"></span> </td>
+        </tr>
+        <tr>
+          <td> <label for="pressure"> Pressure (hPa) </label> </td>
+          <td> <span id="pressure"></span> </td>
+        </tr>
+        <tr>
+          <td> <label for="wind_speed"> Wind Speed (km/h) </label> </td>
+          <td> <span id="wind_speed"></span> </td>
+        </tr>
+        <tr>
+          <td> <label for="wind_direction"> Wind Direction </label> </td>
+          <td> <span id="wind_direction"></span> </td>
+        </tr>
+        <tr>
+          <td> <label for="rain_intensity"> Rain Intensity </label> </td>
+          <td> <span id="rain_intensity"></span> </td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+</body>
+
+</html>

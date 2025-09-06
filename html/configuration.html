@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="jquery.min.js"></script>
+  <script src="configuration.js"></script>
+  <title>WeatherCentral - Configuration</title>
+</head>
+
+<body>
+  <nav id="message"></nav>
+  <nav id="menu">
+    <a href="/configuration.html">Configuration</a>
+    <a href="/infos.html">Infos</a>
+    <a href="/data.html">Data</a>
+  </nav>
+  <h2> Configuration </h2>
+  <form id="datetime">
+    <fieldset>
+      <legend> DateTime </legend>
+      <table>
+        <tr>
+          <td>
+            <label for="datetime_current_date"> Current </label>
+          </td>
+          <td>
+            <input type="date" id="datetime_current_date" readonly>
+            <input type="time" id="datetime_current_time" step="1" readonly>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="datetime_new_date"> New </label>
+          </td>
+          <td>
+            <input type="date" id="datetime_new_date">
+            <input type="time" id="datetime_new_time" step="1">
+          </td>
+        </tr>
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
+  <form id="wind_speed">
+    <fieldset>
+      <legend>Wind Speed</legend>
+      <table>
+        <tr>
+          <td>
+            <label for="wind_speed_radius">Radius</label>
+          </td>
+          <td>
+            <input type="number" id="wind_speed_radius" step="any" required>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
+  <form id="access_point">
+    <fieldset>
+      <legend> Access Point </legend>
+      <table>
+        <tr>
+          <td>
+            <label for="access_point_enabled"> Enabled </label>
+          </td>
+          <td>
+            <input type="checkbox" id="access_point_enabled">
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_mac">MAC</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_mac" readonly>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_ip">IP</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_ip" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_netmask">Netmask</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_netmask" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_gateway">Gateway</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_gateway" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_port">Port</label>
+          </td>
+          <td>
+            <input type="number" id="access_point_port" min="1" max="65534" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_user">User</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_user" minlength="4" maxlength="32" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_password">Password</label>
+          </td>
+          <td>
+            <input type="text" id="access_point_password" minlength="8" maxlength="64" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="access_point_duration">Duration</label>
+          </td>
+          <td>
+            <input type="number" id="access_point_duration" min="10" max="99999" required>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
+  <form id="station">
+    <fieldset>
+      <legend>Station</legend>
+      <table>
+        <tr>
+          <td>
+            <label for="station_enabled">Enabled</label>
+          </td>
+          <td>
+            <input type="checkbox" id="station_enabled">
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_mac">MAC</label>
+          </td>
+          <td>
+            <input type="text" id="station_mac" readonly>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_ip">IP</label>
+          </td>
+          <td>
+            <input type="text" id="station_ip" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_netmask">Netmask</label>
+          </td>
+          <td>
+            <input type="text" id="station_netmask" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_gateway">Gateway</label>
+          </td>
+          <td>
+            <input type="text" id="station_gateway" pattern="^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_port">Port</label>
+          </td>
+          <td>
+            <input type="number" id="station_port" min="1" max="65534" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_user">User</label>
+          </td>
+          <td>
+            <input type="text" id="station_user" minlength="4" maxlength="32" required>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="station_password">Password</label>
+          </td>
+          <td>
+            <input type="text" id="station_password" minlength="8" maxlength="64" required>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" value="Save">
+    </fieldset>
+  </form>
+</body>
+
+</html>

@@ -1,0 +1,115 @@
+/***************************************************/
+
+html {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#message {
+  position: sticky;
+  top: 0;
+  padding: 0.4em;
+  display: none;
+  margin-bottom: 0.4em;
+}
+
+#menu {
+  padding-bottom: 0.4em;
+  border-bottom: 0.15em groove rgb(227, 227, 227);
+}
+
+#menu a {
+  padding: 0.4em;
+}
+
+/***************************************************/
+
+.info {
+  color: #00529B;
+  background-color: #BDE5F8;
+}
+
+.success {
+  color: #4F8A10;
+  background-color: #DFF2BF;
+}
+
+.warning {
+  color: #9F6000;
+  background-color: #FEEFB3;
+}
+
+.error {
+  color: #D8000C;
+  background-color: #FFD2D2;
+}
+
+/***************************************************/
+
+table {
+  table-layout: fixed;
+  min-width: 16em;
+}
+
+table th, table td {
+  padding: 0.2em;
+}
+
+table tbody th:nth-child(odd), table tbody td:nth-child(odd) {
+  width: 5em;
+}
+
+table tbody th:nth-child(even), table tbody td:nth-child(even) {
+  width: 9em;
+}
+
+/***************************************************/
+
+@media (min-width: 30em) {
+  .responsive tr, .responsive td, .responsive th {
+    text-align: center;
+  }
+  .responsive input, .responsive select {
+    width: 100%;
+    min-width: 6em;
+  }
+  .responsive tbody th:nth-child(odd), .responsive tbody td:nth-child(odd) {
+    display: none;
+  }
+  .responsive tbody th:nth-child(even), .responsive tbody td:nth-child(even) {
+    width: auto;
+  }
+}
+
+@media (max-width: 30em) {
+  .responsive thead {
+    display: none;
+  }
+  .responsive tbody th {
+    text-align: left;
+  }
+  .responsive tr {
+    max-width: 16em;
+  }
+  .responsive tr, .responsive td, .responsive th {
+    display: inline-block;
+  }
+  .responsive tr:not(:first-child) {
+    padding-top: 1em;
+  }
+  .responsive tr:not(:last-child) {
+    padding-bottom: 1em;
+    border-bottom: 0.15em groove rgb(227, 227, 227);
+  }
+}
+
+/***************************************************/
+
+#infos canvas {
+  min-width: 10em;
+  max-width: 22em;
+  height: 1.2em;
+  border: 1px solid black;
+  padding: 0.15em;
+}
+
+/***************************************************/

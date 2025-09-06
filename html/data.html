@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="jquery.min.js"></script>
+  <script src="data.js"></script>
+  <title>WeatherCentral - Data</title>
+</head>
+
+<body>
+  <nav id="message"></nav>
+  <nav id="menu">
+    <a href="/configuration.html">Configuration</a>
+    <a href="/infos.html">Infos</a>
+    <a href="/data.html">Data</a>
+  </nav>
+  <h2> Data </h2>
+  <fieldset>
+    <legend> Filter </legend>
+    <form id="filter">
+      <table>
+        <tbody>
+          <tr>
+            <td> <label for="filter_id"> ID </label> </td>
+            <td> <input type="number" id="filter_id" min="0"> </td>
+          </tr>
+          <tr>
+            <td> <label for="filter_start_date"> Start </label> </td>
+            <td> <input type="date" id="filter_start_date"> <input type="time" id="filter_start_time" step="1"> </td>
+          </tr>
+          <tr>
+            <td> <label for="filter_end_date"> End </label> </td>
+            <td> <input type="date" id="filter_end_date"> <input type="time" id="filter_end_time" step="1"> </td>
+          </tr>
+        </tbody>
+      </table>
+      <input type="submit" id="filter_button" value="Filter">
+      <input type="submit" id="filter_download" value="Download">
+      <input type="reset" id="filter_clear" value="Clear">
+    </form>
+  </fieldset>
+  <fieldset>
+    <legend> Result </legend>
+    <table id="result" class="responsive">
+      <thead>
+        <tr>
+          <th> ID </th>
+          <th> Date </th>
+          <th> Time </th>
+          <th> Temperature (°C) </th>
+          <th> Humidity (%) </th>
+          <th> Pressure (hPa) </th>
+          <th> Wind Speed (km/h) </th>
+          <th> Wind Direction </th>
+          <th> Rain Intensity </th>
+        </tr>
+      </thead>
+      <tbody>
+        <template id="data_template">
+          <tr>
+            <th> <label for="data_id"> ID </label> </th>
+            <th> <span id="data_id"></span> </th>
+            <td> <label for="data_date"> Date </label> </td>
+            <td> <span id="data_date"></span> </td>
+            <td> <label for="data_time"> Time </label> </td>
+            <td> <span id="data_time"></span> </td>
+            <td> <label for="data_temperature"> Temperature (°C) </label>
+            <td> <span id="data_temperature"></span> </td>
+            <td> <label for="data_humidity"> Humidity (%) </label> </td>
+            <td> <span id="data_humidity"></span> </td>
+            <td> <label for="data_pressure"> Pressure (hPa) </label> </td>
+            <td> <span id="data_pressure"></span> </td>
+            <td> <label for="data_wind_speed"> Wind Speed (km/h) </label> </td>
+            <td> <span id="data_wind_speed"></span> </td>
+            <td> <label for="data_wind_direction"> Wind Direction </label> </td>
+            <td> <span id="data_wind_direction"></span> </td>
+            <td> <label for="data_rain_intensity"> Rain Intensity </label> </td>
+            <td> <span id="data_rain_intensity"></span> </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </fieldset>
+</body>
+
+</html>
