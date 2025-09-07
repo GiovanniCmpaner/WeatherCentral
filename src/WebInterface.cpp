@@ -35,7 +35,7 @@ namespace WebInterface
 
     static AsyncWebSocket sensorsWs = {"/sensors.ws"};
 
-    static auto buildFilter( AsyncWebServerRequest* request ) -> Database::Filter
+    static auto buildFilter( AsyncWebServerRequest* request, uint32_t limit ) -> Database::Filter
     {
         auto start = std::chrono::system_clock::time_point::min();
         auto end = std::chrono::system_clock::time_point::max();
@@ -49,15 +49,13 @@ namespace WebInterface
             end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
         }
 
-        return Database::Filter{start, end};
+        return Database::Filter{start, end, limit};
     }
 
     namespace Get
     {
         static auto handleConfigurationJson( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /configuration.json" );
-
             auto response{new AsyncJsonResponse{false, 2048}};
             auto& responseJson{response->getRoot()};
 
@@ -69,18 +67,19 @@ namespace WebInterface
 
         static auto handleDataJson( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /configuration.json" , request->url());
-
             auto response{new AsyncJsonResponse{true, 4096}};
             auto& responseJson{response->getRoot()};
 
             {
-                auto filter{ WebInterface::buildFilter( request )};
-                Database::SensorData sensorData;
-                for ( auto n{0}; n < 20 and filter.next( &sensorData ); ++n )
+                auto filter = WebInterface::buildFilter( request, 20 );
+                while(true)
                 {
-                    auto element{responseJson.add()};
-                    sensorData.serialize( element );
+                    const auto sensorData = filter.next();
+                    if(!sensorData.has_value()){
+                        break;
+                    }
+                    auto element = responseJson.add();
+                    sensorData->serialize( element );
                 }
             }
 
@@ -90,8 +89,6 @@ namespace WebInterface
 
         static auto handleDateTimeJson( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /datetime.json" );
-
             auto response{new AsyncJsonResponse{}};
             auto& responseJson{response->getRoot()};
 
@@ -103,29 +100,21 @@ namespace WebInterface
 
         static auto handleConfigurationHtml( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /configuration.html" );
-
             request->send_P( 200, "text/html", configuration_html_start, static_cast<size_t>( configuration_html_end - configuration_html_start ) );
         }
 
         static auto handleConfigurationJs( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /configuration.js" );
-
             request->send_P( 200, "application/javascript", configuration_js_start, static_cast<size_t>( configuration_js_end - configuration_js_start ) );
         }
 
         static auto handleDataHtml( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /data.html" );
-            
             request->send_P( 200, "text/html", data_html_start, static_cast<size_t>( data_html_end - data_html_start ) );
         }
 
         static auto handleDataJs( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /data.js" );
-
             request->send_P( 200, "application/javascript", data_js_start, static_cast<size_t>( data_js_end - data_js_start ) );
         }
 
@@ -141,12 +130,12 @@ namespace WebInterface
 
         static auto handleDataCsv( AsyncWebServerRequest* request ) -> void
         {
-            log_d( "GET /data.csv" );
+            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request, UINT32_MAX ) );
 
-            auto stream{std::make_shared<std::stringstream>()};
-            stream->imbue( loc );
-            auto filter{std::make_shared<Database::Filter>( WebInterface::buildFilter( request ) )};
-            auto response = request->beginChunkedResponse( "text/csv", [ = ]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t 
+            auto stream = std::make_shared<std::stringstream>();
+            stream->imbue(loc);
+
+            auto response = request->beginChunkedResponse( "text/csv", [=]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t 
             {
                 auto len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
                 if ( len == 0 )
@@ -164,16 +153,16 @@ namespace WebInterface
                     }
                     else
                     {
-                        Database::SensorData sensorData;
-                        if( filter->next( &sensorData ) )
+                        const auto sensorData = filter->next();
+                        if( sensorData.has_value() )
                         {
-                            ( *stream ) << Utils::DateTime::toString( std::chrono::system_clock::from_time_t( sensorData.dateTime ) ) << ';'
-                                        << sensorData.temperature << ';'
-                                        << sensorData.humidity << ';'
-                                        << sensorData.pressure << ';'
-                                        << sensorData.windSpeed << ';'
-                                        << Utils::WindDirection::getName(sensorData.windDirection) << ';'
-                                        << Utils::RainIntensity::getName(sensorData.rainIntensity) << "\r\n";
+                            ( *stream ) << Utils::DateTime::toString( std::chrono::system_clock::from_time_t( sensorData->dateTime ) ) << ';'
+                                        << sensorData->temperature << ';'
+                                        << sensorData->humidity << ';'
+                                        << sensorData->pressure << ';'
+                                        << sensorData->windSpeed << ';'
+                                        << Utils::WindDirection::getName(sensorData->windDirection) << ';'
+                                        << Utils::RainIntensity::getName(sensorData->rainIntensity) << "\r\n";
                             len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
                         }
                     }
@@ -188,8 +177,6 @@ namespace WebInterface
 
         static auto handleJqueryMinJsGz( AsyncWebServerRequest* request ) -> void
         {
-            log_d("GET /jquery.min.js.gz");
-
             auto response = request->beginResponse_P(200, "application/javascript", jquery_min_js_gz_start, static_cast<size_t>(jquery_min_js_gz_end - jquery_min_js_gz_start));
             response->addHeader("Content-Encoding", "gzip");
             request->send(response);
@@ -197,8 +184,6 @@ namespace WebInterface
 
         static auto handleChartMinJsGz(AsyncWebServerRequest *request) -> void
         {
-            log_d("GET /chart.min.js.gz");
-
             auto response{request->beginResponse_P(200, "application/javascript", chart_min_js_gz_start, static_cast<size_t>(chart_min_js_gz_end - chart_min_js_gz_start))};
             response->addHeader("Content-Encoding", "gzip");
             request->send(response);
@@ -206,22 +191,16 @@ namespace WebInterface
 
         static auto handleInfosHtml( AsyncWebServerRequest* request ) -> void
         {
-            log_d("GET /info.html");
-
             request->send_P( 200, "text/html", infos_html_start, static_cast<size_t>( infos_html_end - infos_html_start ) );
         }
 
         static auto handleInfosJs( AsyncWebServerRequest* request ) -> void
         {
-            log_d("GET /info.js");
-
             request->send_P( 200, "application/javascript", infos_js_start, static_cast<size_t>( infos_js_end - infos_js_start ) );
         }
 
         static auto handleStyleCss( AsyncWebServerRequest* request ) -> void
         {
-            log_d("GET /style.css");
-
             request->send_P( 200, "text/css", style_css_start, static_cast<size_t>( style_css_end - style_css_start ) );
         }
 
@@ -591,7 +570,8 @@ namespace WebInterface
                 auto doc{ArduinoJson::DynamicJsonDocument{1024}};
                 auto json{doc.as<ArduinoJson::JsonVariant>()};
 
-                Infos::serialize(json);
+                const auto sensorData = Infos::SensorData::get();
+                sensorData.serialize(json);
 
                 auto str = String{};
                 ArduinoJson::serializeJson(doc, str);

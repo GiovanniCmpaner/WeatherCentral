@@ -15,14 +15,14 @@ namespace Utils
         {
             static const auto windToStr = std::unordered_map<::WindDirection, std::string>
             {
-                {::WindDirection::NORTH,     "North"},
-                {::WindDirection::SOUTH,     "South"},
-                {::WindDirection::EAST,      "East"},
-                {::WindDirection::WEST,      "West"},
-                {::WindDirection::NORTHEAST, "Northeast"},
-                {::WindDirection::SOUTHEAST, "Southeast"},
-                {::WindDirection::SOUTHWEST, "Southwest"},
-                {::WindDirection::NORTHWEST, "Northwest"},
+                {::WindDirection::NORTH,     "Norte"},
+                {::WindDirection::SOUTH,     "Sul"},
+                {::WindDirection::EAST,      "Leste"},
+                {::WindDirection::WEST,      "Oeste"},
+                {::WindDirection::NORTHEAST, "Nordeste"},
+                {::WindDirection::SOUTHEAST, "Sudeste"},
+                {::WindDirection::SOUTHWEST, "Sudoeste"},
+                {::WindDirection::NORTHWEST, "Noroeste"},
             };
             return windToStr.at(dir);
         }
@@ -31,14 +31,14 @@ namespace Utils
         {
             static const auto strToWind = std::unordered_map<std::string, ::WindDirection>
             {
-                {"North",     ::WindDirection::NORTH},
-                {"South",     ::WindDirection::SOUTH},
-                {"East",      ::WindDirection::EAST},
-                {"West",      ::WindDirection::WEST},
-                {"Northeast", ::WindDirection::NORTHEAST},
-                {"Southeast", ::WindDirection::SOUTHEAST},
-                {"Southwest", ::WindDirection::SOUTHWEST},
-                {"Northwest", ::WindDirection::NORTHWEST},
+                {"Norte",    ::WindDirection::NORTH},
+                {"Sul",      ::WindDirection::SOUTH},
+                {"Leste",    ::WindDirection::EAST},
+                {"Oeste",    ::WindDirection::WEST},
+                {"Nordeste", ::WindDirection::NORTHEAST},
+                {"Sudeste",  ::WindDirection::SOUTHEAST},
+                {"Sudoeste", ::WindDirection::SOUTHWEST},
+                {"Noroeste", ::WindDirection::NORTHWEST},
             };
             return strToWind.at(name);
         }
@@ -50,10 +50,9 @@ namespace Utils
         {
             static const auto rainToStr = std::unordered_map<::RainIntensity, std::string>
             {
-                {::RainIntensity::DRY,   "Dry"},
-                {::RainIntensity::HUMID, "Humid"},
-                {::RainIntensity::RAINY, "Rainy"},
-                {::RainIntensity::STORM, "Storm"},
+                {::RainIntensity::DRY,   "Seco"},
+                {::RainIntensity::HUMID, "Umido"},
+                {::RainIntensity::RAINY, "Chuva"},
             };
             return rainToStr.at(dir);
         }
@@ -62,10 +61,9 @@ namespace Utils
         {
             static const auto strToRain = std::unordered_map<std::string, ::RainIntensity>
             {
-                {"Dry",   ::RainIntensity::DRY},
-                {"Humid", ::RainIntensity::HUMID},
-                {"Rainy", ::RainIntensity::RAINY},
-                {"Storm", ::RainIntensity::STORM},
+                {"Seco",       ::RainIntensity::DRY},
+                {"Umido",      ::RainIntensity::HUMID},
+                {"Chuva",      ::RainIntensity::RAINY},
             };
             return strToRain.at(name);
         }

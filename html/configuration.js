@@ -235,7 +235,7 @@ function getConfiguration() {
             $("#station_user").prop("value", cfg.station.user);
             $("#station_password").prop("value", cfg.station.password);
 
-            $("#wind_speed_radius").prop("value", cfg.wind_speed.radius);
+            $("#wind_speed_radius").prop("value", cfg.wind_speed.radius.toFixed(2));
 
             {
                 var template = $($.parseHTML($("#wind_direction_template").html()));

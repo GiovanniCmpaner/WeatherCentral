@@ -91,7 +91,7 @@
             <label for="wind_speed_radius">Radius (m)</label>
           </td>
           <td>
-            <input type="number" id="wind_speed_radius" step="0.1" required>
+            <input type="number" id="wind_speed_radius" min="0.01" max="1.00" step="0.01" required>
           </td>
         </tr>
       </table>
@@ -116,10 +116,10 @@
                 <span id="wind_direction_name">Norte</span>
               </td>
               <td>
-                <input type="number" id="wind_direction_min" step="1" required>
+                <input type="number" id="wind_direction_min" min="0" max="4095" step="1" required>
               </td>
               <td>
-                <input type="number" id="wind_direction_max" step="1" required>
+                <input type="number" id="wind_direction_max" min="0" max="4095" step="1" required>
               </td>
             </tr>
           </template>
@@ -147,10 +147,10 @@
                 <span id="rain_intensity_name">Norte</span>
               </td>
               <td>
-                <input type="number" id="rain_intensity_min" step="1" required>
+                <input type="number" id="rain_intensity_min" min="0" max="4095" step="1" required>
               </td>
               <td>
-                <input type="number" id="rain_intensity_max" step="1" required>
+                <input type="number" id="rain_intensity_max" min="0" max="4095" step="1" required>
               </td>
             </tr>
           </template>

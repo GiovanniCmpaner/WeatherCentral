@@ -22,7 +22,6 @@ enum class RainIntensity {
     DRY   = 0,
     HUMID = 1,
     RAINY = 2,
-    STORM = 3,
 };
 
 struct Configuration
@@ -54,7 +53,7 @@ struct Configuration
 
     struct WindSpeed
     {
-        double radius;
+        float radius;
     };
 
     struct WindDirection

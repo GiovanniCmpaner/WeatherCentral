@@ -37,28 +37,27 @@ static const Configuration defaultCfg
         .duration = 30
     },
     .windSpeed = {
-        .radius = 1.0,
+        .radius = 0.15,
     },
     .windDirection = {
         .threshoulds = {
             {
-                {WindDirection::NORTH,     {0, 0}},
-                {WindDirection::SOUTH,     {0, 0}},
-                {WindDirection::EAST,      {0, 0}},
-                {WindDirection::WEST,      {0, 0}},
-                {WindDirection::NORTHEAST, {0, 0}},
-                {WindDirection::SOUTHEAST, {0, 0}},
-                {WindDirection::SOUTHWEST, {0, 0}},
-                {WindDirection::NORTHWEST, {0, 0}},
+                {WindDirection::SOUTHWEST, {  40,   65}},
+                {WindDirection::SOUTH,     {  66,  654}},
+                {WindDirection::WEST,      { 655, 1362}},
+                {WindDirection::SOUTHEAST, {1363, 1544}},
+                {WindDirection::NORTHWEST, {1545, 2484}},
+                {WindDirection::EAST,      {2485, 3168}},
+                {WindDirection::NORTH,     {3169, 3908}},
+                {WindDirection::NORTHEAST, {3909, 4095}},
             }
         }
     },
     .rainIntensity = {
         .threshoulds = {
-            {RainIntensity::DRY,   {0, 0}},
-            {RainIntensity::HUMID, {0, 0}},
-            {RainIntensity::RAINY, {0, 0}},
-            {RainIntensity::STORM, {0, 0}},
+            {RainIntensity::DRY,   {   0, 1000}},
+            {RainIntensity::HUMID, {1001, 3000}},
+            {RainIntensity::RAINY, {3001, 4095}},
         }
     }
 };
@@ -210,7 +209,7 @@ auto Configuration::deserialize( const ArduinoJson::JsonVariant& json ) -> void
             threshould.second = json["wind_direction"]["threshoulds"][Utils::WindDirection::getName(direction)]["max"] | 0;
         }
     }
-    
+
     if(json.containsKey("rain_intensity"))
     {
         for(auto& [intensity, threshould] : this->rainIntensity.threshoulds) 

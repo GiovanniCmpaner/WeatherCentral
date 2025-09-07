@@ -5,36 +5,24 @@
 #include <functional>
 #include <chrono>
 #include <sqlite3.h>
+#include <optional>
 
 #include "Configuration.hpp"
+#include "Infos.hpp"
 
 namespace Database
 {
-    struct SensorData
-    {
-        std::time_t dateTime;
-        double temperature;
-        double humidity;
-        double pressure;
-        double windSpeed;
-        WindDirection windDirection;
-        RainIntensity rainIntensity;
-
-        static auto get() -> SensorData;
-        auto serialize ( ArduinoJson::JsonVariant& json ) const -> void;
-    };
-
     class Filter
     {
         private:
             sqlite3_stmt* res;
         public:
-            Filter( std::chrono::system_clock::time_point start = std::chrono::system_clock::time_point::min(), std::chrono::system_clock::time_point end = std::chrono::system_clock::time_point::max() );
+            Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, uint32_t limit );
             Filter( Filter& ) = delete;
             Filter( Filter&& );
             ~Filter();
 
-            auto next( SensorData* sensorData ) const -> bool;
+            auto next() const -> std::optional<Infos::SensorData>;
     };
 
     auto init() -> void;
