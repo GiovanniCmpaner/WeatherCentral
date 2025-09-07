@@ -152,9 +152,9 @@ namespace Database
         log_d( "end" );
     }
 
-    auto process() -> void
+    auto process(const std::chrono::system_clock::time_point& syncTimer) -> void
     {
-        Utils::bound( std::chrono::minutes( 5 ), Database::generate );
+        Utils::bound( std::chrono::minutes( 15 ), Database::generate );
     }
 
     Filter::Filter( int64_t id, std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end )

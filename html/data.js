@@ -150,10 +150,10 @@ function getData(filter) {
                 row.find("#data_id").text(d.id);
                 row.find("#data_date").text(date);
                 row.find("#data_time").text(time);
-                row.find("#data_temperature").text(d.temperature);
-                row.find("#data_humidity").text(d.humidity);
-                row.find("#data_pressure").text(d.pressure);
-                row.find("#data_wind_speed").text(d.wind_speed);
+                row.find("#data_temperature").text(d.temperature.toFixed(2));
+                row.find("#data_humidity").text(d.humidity.toFixed(2));
+                row.find("#data_pressure").text(d.pressure.toFixed(2));
+                row.find("#data_wind_speed").text(d.wind_speed.toFixed(2));
                 row.find("#data_wind_direction").text(d.wind_direction);
                 row.find("#data_rain_intensity").text(d.rain_intensity);
                 for (let c of row.find("*")) {

@@ -44,8 +44,12 @@ extern const uint8_t style_css_end[] asm( "_binary_html_style_css_end" );
 
 namespace WebInterface
 {
-    static std::unique_ptr<AsyncWebServer> server{};
-    static std::chrono::system_clock::time_point modeTimer{};
+    static std::unique_ptr<AsyncWebServer> server = {};
+    static std::chrono::system_clock::time_point modeTimer = {};
+    static std::chrono::system_clock::time_point sensorsSendTimer = {};
+    static std::chrono::system_clock::time_point wsCleanupTimer = {};
+
+    static AsyncWebSocket sensorsWs = {"/sensors.ws"};
 
     static auto buildFilter( AsyncWebServerRequest* request ) -> Database::Filter
     {
@@ -124,17 +128,6 @@ namespace WebInterface
             auto& responseJson{response->getRoot()};
 
             responseJson.set( Utils::DateTime::toString( std::chrono::system_clock::now() ) );
-
-            response->setLength();
-            request->send( response );
-        }
-
-        static auto handleInfosJson( AsyncWebServerRequest* request ) -> void
-        {
-            auto response{new AsyncJsonResponse{}};
-            auto& responseJson{response->getRoot()};
-
-            Infos::serialize( responseJson );
 
             response->setLength();
             request->send( response );
@@ -321,6 +314,34 @@ namespace WebInterface
         }
     } // namespace Post
 
+    namespace WebSocket 
+    {
+        auto handleSensorsWs(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) -> void
+        {
+            if (type == WS_EVT_CONNECT)
+            {
+                log_d("WS %s (%u) connect", server->url(), client->id());
+                client->ping();
+            }
+            else if (type == WS_EVT_DISCONNECT)
+            {
+                log_d("WS %s (%u) disconnect", server->url(), client->id());
+            }
+            else if (type == WS_EVT_ERROR)
+            {
+                log_e("WS %s (%u) error (%u): %s", server->url(), client->id(), *reinterpret_cast<const uint16_t *>(arg), reinterpret_cast<const char *>(data));
+            }
+            else if (type == WS_EVT_PONG)
+            {
+                log_d("WS %s (%u) pong", server->url(), client->id());
+            }
+            else if (type == WS_EVT_DATA)
+            {
+                // NOTHING
+            }
+        }
+    }
+
     static auto configureServer() -> void
     {
         server.release();
@@ -339,7 +360,6 @@ namespace WebInterface
             server->on( "/configuration.json", HTTP_GET, Get::handleConfigurationJson );
             server->on( "/datetime.json", HTTP_GET, Get::handleDateTimeJson );
             server->on( "/data.json", HTTP_GET, Get::handleDataJson );
-            server->on( "/infos.json", HTTP_GET, Get::handleInfosJson );
             server->on( "/configuration.html", HTTP_GET, Get::handleConfigurationHtml );
             server->on( "/configuration.js", HTTP_GET, Get::handleConfigurationJs );
             server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
@@ -353,6 +373,9 @@ namespace WebInterface
             server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
             server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
             server->onFileUpload( Post::handleUpdate );
+
+            sensorsWs.onEvent(WebSocket::handleSensorsWs);
+            server->addHandler(&sensorsWs);
 
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Origin", "*" );
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Methods", "POST, GET, OPTIONS" );
@@ -466,6 +489,59 @@ namespace WebInterface
         return true;
     }
 
+    static auto cleanupWebSockets() -> void
+    {
+        const auto now = std::chrono::system_clock::now();
+
+        if (now - wsCleanupTimer >= std::chrono::milliseconds{1000})
+        {
+            wsCleanupTimer = now;
+
+            WebInterface::sensorsWs.cleanupClients(1);
+        }
+    }
+
+    static auto sendSensors() -> void
+    {
+        const auto now = std::chrono::system_clock::now();
+
+        if (now - sensorsSendTimer >= std::chrono::milliseconds{1000})
+        {
+            sensorsSendTimer = now;
+
+            if (sensorsWs.count() > 0)
+            {
+                auto doc{ArduinoJson::DynamicJsonDocument{1024}};
+                auto json{doc.as<ArduinoJson::JsonVariant>()};
+
+                Infos::serialize(json);
+
+                auto str = String{};
+                ArduinoJson::serializeJson(doc, str);
+                WebInterface::sensorsWs.textAll(str);
+            }
+        }
+    }
+
+    static auto checkModeChange() -> void 
+    {
+        if( cfg.accessPoint.enabled and WiFi.getMode() == WIFI_MODE_AP )
+        {
+            const auto now = std::chrono::system_clock::now();
+            if( WiFi.softAPgetStationNum() > 0 )
+            {
+                modeTimer = now;
+            }
+            else
+            {
+                if( now - modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
+                {
+                    configureStation();
+                }
+            }
+        }
+    }
+
     auto init() -> void
     {
         log_d( "begin" );
@@ -482,20 +558,8 @@ namespace WebInterface
 
     auto process() -> void
     {
-        if( cfg.accessPoint.enabled and WiFi.getMode() == WIFI_MODE_AP )
-        {
-            const auto now{std::chrono::system_clock::now()};
-            if( WiFi.softAPgetStationNum() > 0 )
-            {
-                modeTimer = now;
-            }
-            else
-            {
-                if( now - modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
-                {
-                    configureStation();
-                }
-            }
-        }
+        WebInterface::checkModeChange();
+        WebInterface::cleanupWebSockets();
+        WebInterface::sendSensors();
     }
 } // namespace WebInterface

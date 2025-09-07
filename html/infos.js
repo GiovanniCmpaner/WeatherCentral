@@ -1,61 +1,65 @@
 $(document).ready(() => {
-    updateInfos(true);
-    setInterval(updateInfos, 1000);
+    connectWsSensors();
 });
 
-function updateInfos(first) {
-    first ? infoMessage("Loading") : null;
-    getInfos()
-        //.then((info) => drawGraphs(info))
-        .then(() => first ? successMessage("Done") : null)
-        .then(() => clearMessage())
-        .fail((error) => errorMessage(error));
+let wsSensors;
+
+function connectWsSensors()
+{
+	let deferred = new $.Deferred();
+
+	infoMessage("Socket connecting");
+
+	wsSensors = new WebSocket(`ws://${window.location.host}/sensors.ws`);
+	wsSensors.onopen = (evt) =>
+	{
+		deferred.resolve(wsSensors);
+		successMessage("Socket opened").then(() => clearMessage());
+	};
+
+	wsSensors.onclose = (evt) =>
+	{
+		if (evt.wasClean)
+		{
+			warningMessage("Socket closed");
+		}
+		else
+		{
+			errorMessage("Socket error");
+		}
+		setTimeout(() => connectWsSensors(), 10000);
+	};
+
+	wsSensors.onerror = (evt) =>
+	{
+		// NOTHING
+	};
+
+	wsSensors.onmessage = (evt) =>
+	{
+		let sensors = JSON.parse(evt.data);
+		updateValues(sensors);
+	};
+
+	return deferred.promise();
 }
 
-//function drawGraphs(info) {
-//    for (const [i, sensor] of info.sensors.entries()) {
-//        var canvas = document.getElementById(`sensor_graph_${i}`);
-//        var ctx = canvas.getContext("2d");
-//        ctx.canvas.width = canvas.offsetWidth;
-//        ctx.canvas.height = canvas.offsetHeight;
-//        ctx.fillStyle = "blue";
-//        ctx.fillRect(0, 0, canvas.offsetWidth * (Math.min(Math.max(sensor.percent, 0.0), 100.0) / 100.0), canvas.offsetHeight);
-//    };
-//}
+function updateValues(sensors)
+{
+    if (!sensors.temperature || !sensors.humidity || !sensors.pressure) {
+        $("#temperature").prop("class", "error").text("ERROR");
+        $("#humidity").prop("class", "error").text("ERROR");
+        $("#pressure").prop("class", "error").text("ERROR");
+    }
+    else {
+        $("#temperature").removeProp("class").text(sensors.temperature.toFixed(2));
+        $("#humidity").removeProp("class").text(sensors.humidity.toFixed(2));
+        $("#pressure").removeProp("class").text(sensors.pressure.toFixed(2));
+    }
 
-function getInfos() {
-    var deferred = new $.Deferred();
-
-    $.ajax({
-        type: "GET",
-        url: "/infos.json",
-        accepts: 'application/json',
-        timeout: 5000
-    })
-        .done((info) => {
-            $("#values tbody tr").remove();
-
-            if (!info.temperature || !info.humidity || !info.pressure) {
-                $("#temperature").prop("class", "error").text("ERROR");
-                $("#humidity").prop("class", "error").text("ERROR");
-                $("#pressure").prop("class", "error").text("ERROR");
-            }
-            else {
-                $("#temperature").removeProp("class").text(info.temperature);
-                $("#humidity").removeProp("class").text(info.humidity);
-                $("#pressure").removeProp("class").text(info.pressure);
-            }
-
-            $("#wind_speed").removeProp("class").text(info.wind_speed);
-            $("#wind_direction").removeProp("class").text(info.wind_direction);
-            $("#rain_intensity").removeProp("class").text(info.rain_intensity);
-
-            deferred.resolve(info);
-        })
-        .fail((xhr, status, error) => {
-            deferred.reject(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
-        });
-    return deferred.promise();
+    $("#wind_speed").removeProp("class").text(sensors.wind_speed.toFixed(2));
+    $("#wind_direction").removeProp("class").text(sensors.wind_direction);
+    $("#rain_intensity").removeProp("class").text(sensors.rain_intensity);
 }
 
 function clearMessage() {

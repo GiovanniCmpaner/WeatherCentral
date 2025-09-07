@@ -55,11 +55,11 @@ table th, table td {
 }
 
 table tbody th:nth-child(odd), table tbody td:nth-child(odd) {
-  width: 5em;
+  min-width: 5em;
 }
 
 table tbody th:nth-child(even), table tbody td:nth-child(even) {
-  width: 9em;
+  min-width: 9em;
 }
 
 /***************************************************/

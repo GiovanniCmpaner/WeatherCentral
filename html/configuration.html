@@ -21,7 +21,7 @@
   <h2> Configuration </h2>
   <form id="datetime">
     <fieldset>
-      <legend> DateTime </legend>
+      <legend> Date Time </legend>
       <table>
         <tr>
           <td>
@@ -29,6 +29,8 @@
           </td>
           <td>
             <input type="date" id="datetime_current_date" readonly>
+          </td>
+          <td>
             <input type="time" id="datetime_current_time" step="1" readonly>
           </td>
         </tr>
@@ -38,6 +40,8 @@
           </td>
           <td>
             <input type="date" id="datetime_new_date">
+          </td>
+          <td>
             <input type="time" id="datetime_new_time" step="1">
           </td>
         </tr>
@@ -51,10 +55,10 @@
       <table>
         <tr>
           <td>
-            <label for="wind_speed_radius">Radius</label>
+            <label for="wind_speed_radius">Radius (m)</label>
           </td>
           <td>
-            <input type="number" id="wind_speed_radius" step="any" required>
+            <input type="number" id="wind_speed_radius" step="0.1" required>
           </td>
         </tr>
       </table>
@@ -79,10 +83,10 @@
                 <span id="wind_direction_name">Norte</span>
               </td>
               <td>
-                <input type="number" id="wind_direction_min" step="any" required>
+                <input type="number" id="wind_direction_min" step="1" required>
               </td>
               <td>
-                <input type="number" id="wind_direction_max" step="any" required>
+                <input type="number" id="wind_direction_max" step="1" required>
               </td>
             </tr>
           </template>
@@ -110,10 +114,10 @@
                 <span id="rain_intensity_name">Norte</span>
               </td>
               <td>
-                <input type="number" id="rain_intensity_min" step="any" required>
+                <input type="number" id="rain_intensity_min" step="1" required>
               </td>
               <td>
-                <input type="number" id="rain_intensity_max" step="any" required>
+                <input type="number" id="rain_intensity_max" step="1" required>
               </td>
             </tr>
           </template>

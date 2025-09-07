@@ -210,7 +210,7 @@ function getConfiguration() {
             
             {
                 var template = $($.parseHTML($("#wind_direction_template").html()));
-                for (const [i, s] of cfg.wind_direction.entries()) {
+                for (const [i, s] of Object.entries(cfg.wind_direction.threshoulds)) {
                     var row = template.clone();
                     row.find("#wind_direction_name").text(i);
                     row.find("#wind_direction_min").prop("value", s.min);
@@ -229,7 +229,7 @@ function getConfiguration() {
 
             {
                 var template = $($.parseHTML($("#rain_intensity_template").html()));
-                for (const [i, s] of cfg.rain_intensity.entries()) {
+                for (const [i, s] of Object.entries(cfg.rain_intensity.threshoulds)) {
                     var row = template.clone();
                     row.find("#rain_intensity_name").text(i);
                     row.find("#rain_intensity_min").prop("value", s.min);
