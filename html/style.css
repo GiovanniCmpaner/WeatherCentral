@@ -107,7 +107,6 @@ table tbody th:nth-child(even), table tbody td:nth-child(even) {
 #infos canvas {
   min-width: 10em;
   max-width: 22em;
-  height: 1.2em;
   border: 1px solid black;
   padding: 0.15em;
 }
