@@ -179,6 +179,7 @@ function createTemperatureChart()
 		},
 		options:
 		{
+			responsive: false,
 			tooltips:
 			{
 				enabled: false
@@ -243,6 +244,7 @@ function createHumidityChart()
 		},
 		options:
 		{
+			responsive: false,
 			tooltips:
 			{
 				enabled: false
@@ -308,6 +310,7 @@ function createPressureChart()
 		},
 		options:
 		{
+			responsive: false,
 			tooltips:
 			{
 				enabled: false
@@ -373,6 +376,7 @@ function createWindSpeedChart()
 		},
 		options:
 		{
+			responsive: false,
 			tooltips:
 			{
 				enabled: false
