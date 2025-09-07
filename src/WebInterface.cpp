@@ -4,6 +4,7 @@
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 #include <WiFi.h>
+#include <LittleFS.h>
 #include <chrono>
 #include <cstdlib>
 #include <cstdint>
@@ -36,14 +37,9 @@ namespace WebInterface
 
     static auto buildFilter( AsyncWebServerRequest* request ) -> Database::Filter
     {
-        auto id{int64_t{}};
-        auto start{std::chrono::system_clock::time_point::min()};
-        auto end{std::chrono::system_clock::time_point::max()};
+        auto start = std::chrono::system_clock::time_point::min();
+        auto end = std::chrono::system_clock::time_point::max();
 
-        if ( request->hasParam( "id" ) )
-        {
-            id = request->getParam( "id" )->value().toInt();
-        }
         if ( request->hasParam( "start" ) )
         {
             start = Utils::DateTime::fromString( request->getParam( "start" )->value().c_str() );
@@ -53,30 +49,15 @@ namespace WebInterface
             end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
         }
 
-        return Database::Filter{id, start, end};
+        return Database::Filter{start, end};
     }
 
     namespace Get
     {
-        static auto handleProgmem( AsyncWebServerRequest* request, const std::string& contentType, const uint8_t* content, size_t len ) -> void
-        {
-            const auto lastModified{Utils::DateTime::compiled()};
-            auto ifModifiedSince{std::chrono::system_clock::time_point::min()};
-
-            if ( request->hasHeader( "If-Modified-Since" ) )
-            {
-                ifModifiedSince = Utils::DateTime::fromStringHttp( request->getHeader( "If-Modified-Since" )->value().c_str() );
-            }
-
-            auto response{lastModified <= ifModifiedSince ? request->beginResponse( 304 ) : request->beginResponse_P( 200, contentType.data(), content, len )};
-            response->addHeader( "Last-Modified", Utils::DateTime::toStringHttp( lastModified ).data() );
-            response->addHeader( "Date", Utils::DateTime::toStringHttp( std::chrono::system_clock::now() ).data() );
-            response->addHeader( "Cache-Control", "public, max-age=0" );
-            request->send( response );
-        }
-
         static auto handleConfigurationJson( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /configuration.json" );
+
             auto response{new AsyncJsonResponse{false, 2048}};
             auto& responseJson{response->getRoot()};
 
@@ -88,6 +69,8 @@ namespace WebInterface
 
         static auto handleDataJson( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /configuration.json" , request->url());
+
             auto response{new AsyncJsonResponse{true, 4096}};
             auto& responseJson{response->getRoot()};
 
@@ -107,6 +90,8 @@ namespace WebInterface
 
         static auto handleDateTimeJson( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /datetime.json" );
+
             auto response{new AsyncJsonResponse{}};
             auto& responseJson{response->getRoot()};
 
@@ -118,21 +103,29 @@ namespace WebInterface
 
         static auto handleConfigurationHtml( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /configuration.html" );
+
             request->send_P( 200, "text/html", configuration_html_start, static_cast<size_t>( configuration_html_end - configuration_html_start ) );
         }
 
         static auto handleConfigurationJs( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /configuration.js" );
+
             request->send_P( 200, "application/javascript", configuration_js_start, static_cast<size_t>( configuration_js_end - configuration_js_start ) );
         }
 
         static auto handleDataHtml( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /data.html" );
+            
             request->send_P( 200, "text/html", data_html_start, static_cast<size_t>( data_html_end - data_html_start ) );
         }
 
         static auto handleDataJs( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /data.js" );
+
             request->send_P( 200, "application/javascript", data_js_start, static_cast<size_t>( data_js_end - data_js_start ) );
         }
 
@@ -148,51 +141,55 @@ namespace WebInterface
 
         static auto handleDataCsv( AsyncWebServerRequest* request ) -> void
         {
+            log_d( "GET /data.csv" );
+
             auto stream{std::make_shared<std::stringstream>()};
             stream->imbue( loc );
             auto filter{std::make_shared<Database::Filter>( WebInterface::buildFilter( request ) )};
-            auto response{request->beginChunkedResponse( "text/csv", [ = ]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t {
-                    auto len{stream->readsome( reinterpret_cast<char*>( buffer ), maxLen )};
-                    if ( len == 0 )
+            auto response = request->beginChunkedResponse( "text/csv", [ = ]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t 
+            {
+                auto len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
+                if ( len == 0 )
+                {
+                    if( index == 0 )
                     {
-                        if( index == 0 )
+                        ( *stream ) << "datetime" << ';'
+                                    << "temperature" << ';'
+                                    << "humidity" << ';'
+                                    << "pressure" << ';'
+                                    << "wind_speed" << ';'
+                                    << "wind_direction" << ';'
+                                    << "rain_intensity" << "\r\n";
+                        len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
+                    }
+                    else
+                    {
+                        Database::SensorData sensorData;
+                        if( filter->next( &sensorData ) )
                         {
-                            ( *stream ) << "id" << ';'
-                                        << "datetime" << ';'
-                                        << "temperature" << ';'
-                                        << "humidity" << ';'
-                                        << "pressure" << ';'
-                                        << "wind_speed" << ';'
-                                        << "wind_direction" << ';'
-                                        << "rain_intensity" << "\r\n";
+                            ( *stream ) << Utils::DateTime::toString( std::chrono::system_clock::from_time_t( sensorData.dateTime ) ) << ';'
+                                        << sensorData.temperature << ';'
+                                        << sensorData.humidity << ';'
+                                        << sensorData.pressure << ';'
+                                        << sensorData.windSpeed << ';'
+                                        << Utils::WindDirection::getName(sensorData.windDirection) << ';'
+                                        << Utils::RainIntensity::getName(sensorData.rainIntensity) << "\r\n";
                             len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
                         }
-                        else
-                        {
-                            Database::SensorData sensorData;
-                            if( filter->next( &sensorData ) )
-                            {
-                                ( *stream ) << sensorData.id << ';'
-                                            << Utils::DateTime::toString( std::chrono::system_clock::from_time_t( sensorData.dateTime ) ) << ';'
-                                            << sensorData.temperature << ';'
-                                            << sensorData.humidity << ';'
-                                            << sensorData.pressure << ';'
-                                            << sensorData.windSpeed << ';'
-                                            << sensorData.windDirection << ';'
-                                            << sensorData.rainIntensity << "\r\n";
-                                len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
-                            }
-                        }
                     }
-                    return len;
-                } )};
+                }
+                return len;
+            });
+
             response->addHeader( "Content-Disposition", "attachment;filename=data.csv" );
             request->send( response );
-            log_d( "end" );
+
         }
 
-        static auto handleJqueryJsGz( AsyncWebServerRequest* request ) -> void
+        static auto handleJqueryMinJsGz( AsyncWebServerRequest* request ) -> void
         {
+            log_d("GET /jquery.min.js.gz");
+
             auto response = request->beginResponse_P(200, "application/javascript", jquery_min_js_gz_start, static_cast<size_t>(jquery_min_js_gz_end - jquery_min_js_gz_start));
             response->addHeader("Content-Encoding", "gzip");
             request->send(response);
@@ -200,6 +197,8 @@ namespace WebInterface
 
         static auto handleChartMinJsGz(AsyncWebServerRequest *request) -> void
         {
+            log_d("GET /chart.min.js.gz");
+
             auto response{request->beginResponse_P(200, "application/javascript", chart_min_js_gz_start, static_cast<size_t>(chart_min_js_gz_end - chart_min_js_gz_start))};
             response->addHeader("Content-Encoding", "gzip");
             request->send(response);
@@ -207,25 +206,140 @@ namespace WebInterface
 
         static auto handleInfosHtml( AsyncWebServerRequest* request ) -> void
         {
+            log_d("GET /info.html");
+
             request->send_P( 200, "text/html", infos_html_start, static_cast<size_t>( infos_html_end - infos_html_start ) );
         }
 
         static auto handleInfosJs( AsyncWebServerRequest* request ) -> void
         {
+            log_d("GET /info.js");
+
             request->send_P( 200, "application/javascript", infos_js_start, static_cast<size_t>( infos_js_end - infos_js_start ) );
         }
 
         static auto handleStyleCss( AsyncWebServerRequest* request ) -> void
         {
+            log_d("GET /style.css");
+
             request->send_P( 200, "text/css", style_css_start, static_cast<size_t>( style_css_end - style_css_start ) );
         }
 
     } // namespace Get
 
+    namespace File 
+    {
+        auto handleFirmwareBin(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) -> void
+        {
+            if (index == 0)
+            {
+                log_d("POST /firmware.bin");
+
+                if (not filename.endsWith(".bin"))
+                {
+                    request->send(400, "text/plain", "File extension must be .bin");
+                    return;
+                }
+
+                if (request->contentLength() > 1945600)
+                {
+                    request->send(400, "text/plain", "File size must be 1945600 bytes or less");
+                    return;
+                }
+
+                if (Update.size() > 0)
+                {
+                    request->send(500, "text/plain", "Already uploading");
+                    return;
+                }
+
+                if (not Update.begin(request->contentLength()))
+                {
+                    request->send(500, "text/plain", Update.errorString());
+                    return;
+                }
+            }
+
+            if (Update.write(data, len) != len)
+            {
+                request->send(500, "text/plain", Update.errorString());
+                return;
+            }
+
+            if (final)
+            {
+                if (not Update.end(true))
+                {
+                    request->send(500, "text/plain", Update.errorString());
+                    return;
+                }
+                request->send(200, "text/plain", "Success, rebooting in 3 seconds");
+                delay(3000);
+                ESP.restart();
+            }
+        }
+
+        auto handleConfigurationJson(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) -> void
+        {
+            static auto file = fs::File{};
+
+            if (index == 0)
+            {
+                log_d("POST /configuration.json");
+
+                if (not filename.endsWith(".json"))
+                {
+                    request->send(400, "text/plain", "File extension must be .tflite");
+                    return;
+                }
+
+                if (request->contentLength() > 4096)
+                {
+                    request->send(400, "text/plain", "File size must be 4096 bytes or less");
+                    return;
+                }
+
+                if (file.size() > 0)
+                {
+                    request->send(500, "text/plain", "Already uploading");
+                    return;
+                }
+
+                file = LittleFS.open("/configuration.json", FILE_WRITE);
+                if (not file)
+                {
+                    request->send(500, "text/plain", "Error opening file");
+                    return;
+                }
+            }
+
+            if (file.write(data, len) != len)
+            {
+                request->send(500, "text/plain", "Error writing to file, probably there's no space left");
+
+                file.close();
+                LittleFS.remove("/configuration.json");
+
+                return;
+            }
+
+            if (final)
+            {
+                file.close();
+
+                request->send(200, "text/plain", "Success, rebooting in 3 seconds");
+                delay(3000);
+                ESP.restart();
+            }
+        }
+    }
+
     namespace Post
     {
         static auto handleConfigurationJson( AsyncWebServerRequest* request, JsonVariant& requestJson ) -> void
         {
+            log_d("POST /configuration.json");
+
             auto response{new AsyncJsonResponse{}};
             auto& responseJson{response->getRoot()};
 
@@ -243,6 +357,8 @@ namespace WebInterface
 
         static auto handleDateTimeJson( AsyncWebServerRequest* request, JsonVariant& requestJson ) -> void
         {
+            log_d("POST /datetime.json");
+
             auto response{new AsyncJsonResponse{}};
             auto& responseJson{response->getRoot()};
 
@@ -257,43 +373,19 @@ namespace WebInterface
             ESP.restart();
         }
 
-        static auto handleUpdate( AsyncWebServerRequest* request, String filename, size_t index, uint8_t* data, size_t len, bool final ) -> void
+        auto handleFile(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) -> void
         {
-            if( request->url() != "/update" )
+            if (request->url() == "/firmware.bin")
             {
-                request->send( 404 );
-                return;
+                File::handleFirmwareBin(request, filename, index, data, len, final);
             }
-            if( filename != "firmware.bin" )
+            else if (request->url() == "/configuration.json")
             {
-                request->send( 400, "text/plain", "Invalid filename" );
-                return;
+                File::handleConfigurationJson(request, filename, index, data, len, final);
             }
-            if( index == 0 )
+            else
             {
-                Serial.printf( "UploadStart: %s\n", filename.c_str() );
-                if( not Update.begin( request->contentLength() ) )
-                {
-                    request->send( 500, "text/plain", Update.errorString() );
-                    return;
-                }
-
-            }
-            if ( Update.write( data, len ) != len )
-            {
-                request->send( 500, "text/plain", Update.errorString() );
-                return;
-            }
-            if( final )
-            {
-                if( not Update.end( true ) )
-                {
-                    request->send( 500, "text/plain", Update.errorString() );
-                    return;
-                }
-                request->send( 200, "text/plain", "Success, rebooting in 3 seconds" );
-                delay( 3000 );
-                ESP.restart();
+                request->send(404, "not found");
             }
         }
     } // namespace Post
@@ -349,7 +441,7 @@ namespace WebInterface
             server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
             server->on( "/data.js", HTTP_GET, Get::handleDataJs );
             server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
-            server->on("/jquery.min.js.gz", HTTP_GET, Get::handleJqueryJsGz);
+            server->on("/jquery.min.js.gz", HTTP_GET, Get::handleJqueryMinJsGz);
             server->on("/chart.min.js.gz", HTTP_GET, Get::handleChartMinJsGz);
             server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
             server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
@@ -357,7 +449,7 @@ namespace WebInterface
 
             server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
             server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
-            server->onFileUpload( Post::handleUpdate );
+            server->onFileUpload( Post::handleFile );
 
             sensorsWs.onEvent(WebSocket::handleSensorsWs);
             server->addHandler(&sensorsWs);

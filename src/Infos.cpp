@@ -55,14 +55,14 @@ namespace Infos
         return ( round( windSpeed * 100 ) / 100 );
     }
 
-    auto getWindDirection() -> std::string
+    auto getWindDirection() -> WindDirection
     {
-        return "N/A";
+        return WindDirection::NORTH;
     }
 
-    auto getRainIntensity() -> std::string
+    auto getRainIntensity() -> RainIntensity
     {
-        return "N/A";
+        return RainIntensity::DRY;
     }
 
     auto init() -> void
@@ -92,7 +92,8 @@ namespace Infos
         json["humidity"] = Infos::getHumidityPercentage();
         json["pressure"] = Infos::getPressureHpa();
         json["wind_speed"] = Infos::getWindSpeedKmh();
-        json["wind_direction"] = Infos::getWindDirection();
-        json["rain_intensity"] = Infos::getRainIntensity();
+        json["wind_direction"] = Utils::WindDirection::getName(Infos::getWindDirection());
+        json["rain_intensity"] = Utils::RainIntensity::getName(Infos::getRainIntensity());
+
     }
 } // namespace Sensors

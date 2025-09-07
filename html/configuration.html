@@ -19,6 +19,39 @@
     <a href="/data.html">Data</a>
   </nav>
   <h2> Configuration </h2>
+  <form id="firmware">
+    <fieldset>
+      <legend> Firmware Binary </legend>
+      <table>
+        <tr>
+          <td>
+            <label for="firmware_file"> File </label>
+          </td>
+          <td>
+            <input type="file" id="firmware_file" accept=".bin" required>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" id="firmware_upload" value="Upload">
+    </fieldset>
+  </form>
+  <form id="configuration">
+    <fieldset>
+      <legend> Configuration Json </legend>
+      <table>
+        <tr>
+          <td>
+            <label for="configuration_file"> File </label>
+          </td>
+          <td>
+            <input type="file" id="configuration_file" accept=".json" required>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" id="configuration_upload" value="Upload">
+      <input type="submit" id="configuration_download" value="Download" formnovalidate>
+    </fieldset>
+  </form>
   <form id="datetime">
     <fieldset>
       <legend> Date Time </legend>

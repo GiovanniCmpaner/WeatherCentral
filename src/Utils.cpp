@@ -3,11 +3,74 @@
 #include <sstream>
 #include <iomanip>
 
+#include "Configuration.hpp"
 #include "Utils.hpp"
 
 
 namespace Utils
 {
+    namespace WindDirection 
+    {
+        auto getName(::WindDirection dir) -> std::string 
+        {
+            static const auto windToStr = std::unordered_map<::WindDirection, std::string>
+            {
+                {::WindDirection::NORTH,     "North"},
+                {::WindDirection::SOUTH,     "South"},
+                {::WindDirection::EAST,      "East"},
+                {::WindDirection::WEST,      "West"},
+                {::WindDirection::NORTHEAST, "Northeast"},
+                {::WindDirection::SOUTHEAST, "Southeast"},
+                {::WindDirection::SOUTHWEST, "Southwest"},
+                {::WindDirection::NORTHWEST, "Northwest"},
+            };
+            return windToStr.at(dir);
+        }
+
+        auto getValue(const std::string& name) -> ::WindDirection 
+        {
+            static const auto strToWind = std::unordered_map<std::string, ::WindDirection>
+            {
+                {"North",     ::WindDirection::NORTH},
+                {"South",     ::WindDirection::SOUTH},
+                {"East",      ::WindDirection::EAST},
+                {"West",      ::WindDirection::WEST},
+                {"Northeast", ::WindDirection::NORTHEAST},
+                {"Southeast", ::WindDirection::SOUTHEAST},
+                {"Southwest", ::WindDirection::SOUTHWEST},
+                {"Northwest", ::WindDirection::NORTHWEST},
+            };
+            return strToWind.at(name);
+        }
+    }
+
+    namespace RainIntensity 
+    {
+        auto getName(::RainIntensity dir) -> std::string 
+        {
+            static const auto rainToStr = std::unordered_map<::RainIntensity, std::string>
+            {
+                {::RainIntensity::DRY,   "Dry"},
+                {::RainIntensity::HUMID, "Humid"},
+                {::RainIntensity::RAINY, "Rainy"},
+                {::RainIntensity::STORM, "Storm"},
+            };
+            return rainToStr.at(dir);
+        }
+
+        auto getValue(const std::string& name) -> ::RainIntensity 
+        {
+            static const auto strToRain = std::unordered_map<std::string, ::RainIntensity>
+            {
+                {"Dry",   ::RainIntensity::DRY},
+                {"Humid", ::RainIntensity::HUMID},
+                {"Rainy", ::RainIntensity::RAINY},
+                {"Storm", ::RainIntensity::STORM},
+            };
+            return strToRain.at(name);
+        }
+    }
+    
     static std::unordered_map<void( * )(), std::chrono::system_clock::time_point> timers{};
     auto periodic( std::chrono::milliseconds interval, void( *func )() ) -> void
     {

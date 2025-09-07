@@ -1,8 +1,31 @@
 $(document).ready(() => {
+    handleFiles();
     handleConfiguration();
 
     getDateTime().then(() => getConfiguration()).then(() => clearMessage());
 });
+
+function handleFiles() {
+    $("#firmware").submit((event) => {
+        event.preventDefault();
+        if ($("#firmware")[0].checkValidity()) {
+            uploadFirmware();
+        }
+    });
+
+    $("#configuration").submit((event) => {
+        event.preventDefault();
+        let submitter = event.originalEvent.submitter.id;
+        if (submitter == "configuration_upload") {
+            if ($("#configuration")[0].checkValidity()) {
+                uploadConfiguration();
+            }
+        }
+        else if (submitter == "configuration_download") {
+            window.open("configuration.json");
+        }
+    });
+}
 
 function handleConfiguration() {
 
@@ -54,21 +77,22 @@ function setDateTime() {
         timeout: 5000,
         data: JSON.stringify(newDateTime),
         beforeSend: () => {
-            $("input,select").prop("disabled", true);
+            disableInput();
             infoMessage("Sending");
         }
     })
         .done((dateTime) => {
-            successMessage(msg ?? "Done");
-            deferred.resolve();
+            successMessage(msg ?? "Datetime saved").then(() => reload());
+            //deferred.resolve();
         })
         .fail((xhr, status, error) => {
             errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            enableInput();
             deferred.reject();
         })
-        .always(() => {
-            $("input,select").prop("disabled", false);
-        });
+        //.always(() => {
+        //    enableInput();
+        //});
     return deferred.promise();
 }
 
@@ -160,21 +184,22 @@ function setConfiguration(cfg) {
         timeout: 5000,
         data: JSON.stringify(cfg),
         beforeSend: () => {
-            $("input,select").prop("disabled", true);
+            disableInput();
             infoMessage("Sending");
         }
     })
         .done((msg) => {
-            successMessage(msg ?? "Done");
-            deferred.resolve();
+            successMessage(msg ?? "Configuration saved").then(() => reload());
+            //deferred.resolve();
         })
         .fail((xhr, status, error) => {
             errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            enableInput();
             deferred.reject();
         })
-        .always(() => {
-            $("input,select").prop("disabled", false);
-        });
+        //.always(() => {
+        //    enableInput();
+        //});
     return deferred.promise();
 }
 
@@ -186,7 +211,7 @@ function getConfiguration() {
         accepts: 'application/json',
         timeout: 5000,
         beforeSend: () => {
-            $("input,select").prop("disabled", true);
+            disableInput();
             infoMessage("Loading");
         }
     })
@@ -211,7 +236,7 @@ function getConfiguration() {
             $("#station_password").prop("value", cfg.station.password);
 
             $("#wind_speed_radius").prop("value", cfg.wind_speed.radius);
-            
+
             {
                 var template = $($.parseHTML($("#wind_direction_template").html()));
                 for (const [i, s] of Object.entries(cfg.wind_direction.threshoulds).entries()) {
@@ -250,7 +275,7 @@ function getConfiguration() {
                 }
             }
 
-            successMessage("Done");
+            successMessage("Configuration loaded").then(() => clearMessage());
             deferred.resolve();
         })
         .fail((xhr, status, error) => {
@@ -258,7 +283,7 @@ function getConfiguration() {
             deferred.reject();
         })
         .always(() => {
-            $("input,select").prop("disabled", false);
+            enableInput();
         });
     return deferred.promise();
 }
@@ -290,7 +315,7 @@ function getDateTime() {
                 $("#datetime_current_time").val(time.slice(0, 8));
             }, 1000);
 
-            successMessage("Done");
+            successMessage("Datetime loaded").then(() => clearMessage());
             deferred.resolve(current);
         })
         .fail((xhr, status, error) => {
@@ -298,9 +323,110 @@ function getDateTime() {
             deferred.reject();
         })
         .always(() => {
-            $("input,select").prop("disabled", false);
+            enableInput();
         });
     return deferred.promise();
+}
+
+function uploadFirmware() {
+    let deferred = new $.Deferred();
+
+    let file = $("#firmware_file")[0].files[0];
+    if (file.size > 1945600) {
+        errorMessage("File size must be 1945600 bytes or less");
+        deferred.reject();
+    }
+    else {
+        let formData = new FormData();
+        formData.append("firmware.bin", file, file.name);
+
+        $.ajax(
+            {
+                type: "POST",
+                url: "/firmware.bin",
+                contentType: false,
+                processData: false,
+                data: formData,
+                timeout: 300000,
+                beforeSend: () => {
+                    disableInput();
+                    infoMessage("Uploading");
+                }
+            })
+            .done((msg) => {
+                successMessage(msg ?? "Firmware uploaded").then(() => reload());
+                //deferred.resolve();
+            })
+            .fail((xhr, status, error) => {
+                errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+                deferred.reject();
+            });
+        //.always(() =>
+        //{
+        //	enableInput();
+        //});
+    }
+
+    return deferred.promise();
+}
+
+function uploadConfiguration() {
+    let deferred = new $.Deferred();
+
+    let file = $("#configuration_file")[0].files[0];
+    if (file.size > 4096) {
+        errorMessage("File size must be 4096 bytes or less");
+        deferred.reject();
+    }
+    else {
+        let formData = new FormData();
+        formData.append("configuration.json", file, file.name);
+
+        $.ajax(
+            {
+                type: "POST",
+                url: "/configuration.json",
+                contentType: false,
+                processData: false,
+                data: formData,
+                timeout: 30000,
+                beforeSend: () => {
+                    disableInput();
+                    infoMessage("Uploading");
+                }
+            })
+            .done((msg) => {
+                successMessage(msg ?? "Configuration uploaded").then(() => reload());
+                //deferred.resolve();
+            })
+            .fail((xhr, status, error) => {
+                errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+                deferred.reject();
+            });
+        //.always(() =>
+        //{
+        //	enableInput();
+        //});
+    }
+
+    return deferred.promise();
+}
+
+function reload()
+{
+	setTimeout(() =>
+	{
+		infoMessage("Reloading page in 15 seconds");
+		setTimeout(() => location.reload(), 15000);
+	}, 3000);
+}
+
+function disableInput() {
+    $("input,select,button").prop("disabled", true);
+}
+
+function enableInput() {
+    $("input,select,button").prop("disabled", false);
 }
 
 function clearMessage() {

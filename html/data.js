@@ -88,12 +88,6 @@ function getDateTime() {
 
 function buildfilter() {
     var filter = {};
-    if ($("#filter_id").val()) {
-        filter.id = $("#filter_id").val();
-    }
-    else {
-        delete filter.id;
-    }
     if ($("#filter_start_date").val() && $("#filter_start_time").val()) {
         filter.start = `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`;
     }
@@ -141,13 +135,12 @@ function getData(filter) {
                 $("#result tbody tr").remove();
             }
 
-            let lastId = null;
+            let lastDateTime = null;
 
             let template = $($.parseHTML($("#data_template").html()));
             for (const [i, d] of data.entries()) {
                 let row = template.clone();
                 let [date, time] = d.datetime.split(" ");
-                row.find("#data_id").text(d.id);
                 row.find("#data_date").text(date);
                 row.find("#data_time").text(time);
                 row.find("#data_temperature").text(d.temperature.toFixed(2));
@@ -165,20 +158,20 @@ function getData(filter) {
                     }
                 }
                 row.appendTo($("#result tbody"));
-                lastId = Math.max(lastId, d.id);
+                lastDateTime = Math.max(lastDateTime, d.id);
             }
 
             this.prevFilter = filter;
-            if (lastId != null) {
+            if (lastDateTime != null) {
                 if (this.prevFilter != null) {
-                    this.prevFilter.id = lastId + 1;
+                    this.prevFilter.start = lastDateTime + 1;
                 }
                 else {
-                    this.prevFilter = { id: lastId + 1 };
+                    this.prevFilter = { id: lastDateTime + 1 };
                 }
             }
 
-            successMessage("Done");
+            successMessage("Data loaded");
             deferred.resolve(data.length);
         })
         .fail((xhr, status, error) => {

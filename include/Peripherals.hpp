@@ -28,11 +28,11 @@ namespace Peripherals
 
     enum Pins
     {
-        LED_HTB = 16,
+        LED_HTB = 23,
 
-        WIND_SPEED = 23,
-        WIND_DIRECTION = 24,
-        RAIN_INTENSITY = 25,
+        WIND_SPEED = 35,
+        WIND_DIRECTION = 32,
+        RAIN_INTENSITY = 33,
     };
 
     auto init() -> void;

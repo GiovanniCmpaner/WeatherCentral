@@ -20,21 +20,19 @@ namespace Database
 
     auto SensorData::serialize( ArduinoJson::JsonVariant& json ) const -> void
     {
-        json["id"] = this->id;
         json["datetime"] = Utils::DateTime::toString( std::chrono::system_clock::from_time_t( this->dateTime ) );
         json["temperature"] = this->temperature;
         json["humidity"] = this->humidity;
         json["pressure"] = this->pressure;
         json["wind_speed"] = this->windSpeed;
-        json["wind_direction"] = this->windDirection;
-        json["rain_intensity"] = this->rainIntensity;
+        json["wind_direction"] = Utils::WindDirection::getName(this->windDirection);
+        json["rain_intensity"] = Utils::RainIntensity::getName(this->rainIntensity);
     }
 
     auto SensorData::get() -> SensorData
     {
         return
         {
-            .id = 0,
             .dateTime = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() ),
             .temperature = Infos::getTemperatureCelsius(),
             .humidity = Infos::getHumidityPercentage(),
@@ -65,33 +63,21 @@ namespace Database
     {
         log_d( "begin" );
         {
-            const auto query = "CREATE TABLE IF NOT EXISTS                   "
-                               "    SENSORS_DATA (                           "
-                               "        ID              INTEGER PRIMARY KEY, "
-                               "        DATE_TIME       DATETIME,            "
-                               "        TEMPERATURE     NUMERIC,             "
-                               "        HUMIDITY        NUMERIC,             "
-                               "        PRESSURE        NUMERIC,             "
-                               "        WIND_SPEED      NUMERIC,             "
-                               "        WIND_DIRECTION  TEXT,                "
-                               "        RAIN_INTENSITY  TEXT                 "
-                               "    )                                        ";
+            const auto query = "CREATE TABLE IF NOT EXISTS                    "
+                               "    SENSORS_DATA (                            "
+                               "        DATE_TIME       DATETIME PRIMARY KEY, "
+                               "        TEMPERATURE     NUMERIC,              "
+                               "        HUMIDITY        NUMERIC,              "
+                               "        PRESSURE        NUMERIC,              "
+                               "        WIND_SPEED      NUMERIC,              "
+                               "        WIND_DIRECTION  INTEGER,              "
+                               "        RAIN_INTENSITY  INTEGER               "
+                               "    )                                         ";
 
             const auto rc = sqlite3_exec( db, query, nullptr, nullptr, nullptr );
             if ( rc != SQLITE_OK )
             {
                 log_e( "table create error: %s\n", sqlite3_errmsg( db ) );
-                std::abort();
-            }
-        }
-        {
-            const auto query{"CREATE UNIQUE INDEX IF NOT EXISTS DATE_TIME_INDEX "
-                             "ON SENSORS_DATA( DATE_TIME )                      "};
-
-            const auto rc{sqlite3_exec( db, query, nullptr, nullptr, nullptr )};
-            if ( rc != SQLITE_OK )
-            {
-                log_e( "table index error: %s\n", sqlite3_errmsg( db ) );
                 std::abort();
             }
         }
@@ -127,8 +113,8 @@ namespace Database
         sqlite3_bind_double( res, 3, sensorData.humidity );
         sqlite3_bind_double( res, 4, sensorData.pressure );
         sqlite3_bind_double( res, 5, sensorData.windSpeed );
-        sqlite3_bind_text( res, 6, sensorData.windDirection.c_str(), sensorData.windDirection.size(), SQLITE_TRANSIENT);
-        sqlite3_bind_text( res, 7, sensorData.rainIntensity.c_str(), sensorData.rainIntensity.size(), SQLITE_TRANSIENT);
+        sqlite3_bind_int( res, 6, static_cast<int>(sensorData.windDirection));
+        sqlite3_bind_int( res, 7, static_cast<int>(sensorData.rainIntensity));
         if ( sqlite3_step( res ) != SQLITE_DONE )
         {
             log_d( "insert error: %s", sqlite3_errmsg( db ) );
@@ -157,12 +143,11 @@ namespace Database
         Utils::bound( std::chrono::minutes( 15 ), Database::generate );
     }
 
-    Filter::Filter( int64_t id, std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end )
+    Filter::Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end )
     {
         const auto query
         {
             "SELECT                                       "
-            "    ID,                                      "
             "    DATE_TIME,                               "
             "    TEMPERATURE,                             "
             "    HUMIDITY,                                "
@@ -173,8 +158,7 @@ namespace Database
             "FROM                                         "
             "    SENSORS_DATA                             "
             "WHERE                                        "
-            "        ( ID >= IFNULL(?,ID) )               "
-            "    AND ( DATE_TIME >= IFNULL(?,DATE_TIME) ) "
+            "        ( DATE_TIME >= IFNULL(?,DATE_TIME) ) "
             "    AND ( DATE_TIME <= IFNULL(?,DATE_TIME) ) "
             "ORDER BY                                     "
             "    DATE_TIME ASC                            "};
@@ -187,17 +171,13 @@ namespace Database
         }
         else
         {
-            if ( id != int64_t{} )
-            {
-                sqlite3_bind_int64( this->res, 1, id );
-            }
             if ( start != std::chrono::system_clock::time_point::min() )
             {
-                sqlite3_bind_int64( this->res, 2, std::chrono::system_clock::to_time_t( start ) );
+                sqlite3_bind_int64( this->res, 1, std::chrono::system_clock::to_time_t( start ) );
             }
             if ( end != std::chrono::system_clock::time_point::max() )
             {
-                sqlite3_bind_int64( this->res, 3, std::chrono::system_clock::to_time_t( end ) );
+                sqlite3_bind_int64( this->res, 2, std::chrono::system_clock::to_time_t( end ) );
             }
         }
     }
@@ -229,14 +209,13 @@ namespace Database
             return false;
         }
 
-        sensorData->id = sqlite3_column_int64( this->res, 0 );
-        sensorData->dateTime = sqlite3_column_int64( this->res, 1 );
-        sensorData->temperature = sqlite3_column_double( this->res, 2 );
-        sensorData->humidity = sqlite3_column_double( this->res, 3 );
-        sensorData->pressure = sqlite3_column_double( this->res, 4 );
-        sensorData->windSpeed = sqlite3_column_double( this->res, 5 );
-        sensorData->windDirection = reinterpret_cast<const char*>(sqlite3_column_text( this->res, 6 ));
-        sensorData->rainIntensity = reinterpret_cast<const char*>(sqlite3_column_text( this->res, 7 ));
+        sensorData->dateTime = sqlite3_column_int64( this->res, 0 );
+        sensorData->temperature = sqlite3_column_double( this->res, 1 );
+        sensorData->humidity = sqlite3_column_double( this->res, 2 );
+        sensorData->pressure = sqlite3_column_double( this->res, 3 );
+        sensorData->windSpeed = sqlite3_column_double( this->res, 4 );
+        sensorData->windDirection = static_cast<WindDirection>(sqlite3_column_int( this->res, 5 ));
+        sensorData->rainIntensity = static_cast<RainIntensity>(sqlite3_column_int( this->res, 6 ));
         return true;
     }
 } // namespace Database

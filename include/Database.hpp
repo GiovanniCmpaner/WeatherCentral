@@ -6,18 +6,19 @@
 #include <chrono>
 #include <sqlite3.h>
 
+#include "Configuration.hpp"
+
 namespace Database
 {
     struct SensorData
     {
-        std::int64_t id;
         std::time_t dateTime;
         double temperature;
         double humidity;
         double pressure;
         double windSpeed;
-        std::string windDirection;
-        std::string rainIntensity;
+        WindDirection windDirection;
+        RainIntensity rainIntensity;
 
         static auto get() -> SensorData;
         auto serialize ( ArduinoJson::JsonVariant& json ) const -> void;
@@ -28,7 +29,7 @@ namespace Database
         private:
             sqlite3_stmt* res;
         public:
-            Filter( int64_t id = 0, std::chrono::system_clock::time_point start = std::chrono::system_clock::time_point::min(), std::chrono::system_clock::time_point end = std::chrono::system_clock::time_point::max() );
+            Filter( std::chrono::system_clock::time_point start = std::chrono::system_clock::time_point::min(), std::chrono::system_clock::time_point end = std::chrono::system_clock::time_point::max() );
             Filter( Filter& ) = delete;
             Filter( Filter&& );
             ~Filter();

@@ -26,17 +26,6 @@
         <tbody>
           <tr>
             <td> 
-              <label for="filter_id"> ID </label> 
-            </td>
-            <td> 
-              <input type="number" id="filter_id" min="0"> 
-            </td>
-            <td>
-              <!--Vazio-->
-            </td>
-          </tr>
-          <tr>
-            <td> 
               <label for="filter_start_date"> Start </label> 
             </td>
             <td> 
@@ -69,7 +58,6 @@
     <table id="result" class="responsive">
       <thead>
         <tr>
-          <th> ID </th>
           <th> Date </th>
           <th> Time </th>
           <th> Temperature (°C) </th>
@@ -83,8 +71,6 @@
       <tbody>
         <template id="data_template">
           <tr>
-            <th> <label for="data_id"> ID </label> </th>
-            <th> <span id="data_id"></span> </th>
             <td> <label for="data_date"> Date </label> </td>
             <td> <span id="data_date"></span> </td>
             <td> <label for="data_time"> Time </label> </td>

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include <ArduinoJson.hpp>
+
+#include "Configuration.hpp"
 
 namespace Infos
 {
@@ -12,8 +13,8 @@ namespace Infos
     auto getTemperatureCelsius() -> float;
     auto getHumidityPercentage() -> float;
     auto getWindSpeedKmh() -> float;
-    auto getWindDirection() -> std::string;
-    auto getRainIntensity() -> std::string;
+    auto getWindDirection() -> WindDirection;
+    auto getRainIntensity() -> RainIntensity;
 
     auto serialize( ArduinoJson::JsonVariant& json ) -> void;
 }
