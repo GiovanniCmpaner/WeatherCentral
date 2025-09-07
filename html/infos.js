@@ -3,6 +3,7 @@ $(document).ready(() => {
 	createHumidityChart();
 	createPressureChart();
 	createWindSpeedChart();
+	createWindDirectionChart();
     connectWsSensors();
 });
 
@@ -11,6 +12,7 @@ let temperatureChart;
 let humidityChart;
 let pressureChart;
 let windSpeedChart;
+let windDirectionChart;
 
 function connectWsSensors()
 {
@@ -77,6 +79,7 @@ function updateCharts(sensors)
 	updateHumidityChart(sensors.humidity);
 	updatePressureChart(sensors.pressure);
 	updateWindSpeedChart(sensors.wind_speed);
+	updateWindDirectionChart(sensors.wind_direction);
 }
 
 function updateTemperatureChart(temperature)
@@ -161,6 +164,38 @@ function updateWindSpeedChart(windSpeed)
 	});
 
 	windSpeedChart.update();
+}
+
+const directionsDegrees = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+const directionsLabels  = ['N','NE','E','SE','S','SW','W','NW','N'];
+
+function directionPTtoAngle(dirPT) {
+    switch (dirPT.toLowerCase()) {
+        case 'norte':      return 0;
+        case 'nordeste':   return 45;
+        case 'leste':      return 90;
+        case 'sudeste':    return 135;
+        case 'sul':        return 180;
+        case 'sudoeste':   return 225;
+        case 'oeste':      return 270;
+        case 'noroeste':   return 315;
+        default:           return 0; // fallback
+    }
+}
+
+const directionsPT = ['Norte','Nordeste','Leste','Sudeste','Sul','Sudoeste','Oeste','Noroeste'];
+
+function updateWindDirectionChart(windDirection)
+{
+    const angle = directionPTtoAngle(windDirection);
+    
+    // Determine which segment corresponds to the angle
+    const segmentSize = 360 / directionsPT.length; // 45°
+    const segmentIndex = Math.floor((angle + segmentSize/2) / segmentSize) % directionsPT.length;
+
+    // Fill data: 1 for selected segment, 0 for the rest
+    windDirectionChart.data.datasets[0].data = directionsPT.map((_, i) => i === segmentIndex ? 1 : 0);
+    windDirectionChart.update();
 }
 
 function createTemperatureChart()
@@ -421,6 +456,37 @@ function createWindSpeedChart()
 			},
 			legend: {
 				display: false
+			}
+		}
+	});
+}
+
+function createWindDirectionChart()
+{
+	let ctx = document.getElementById('wind_direction_chart').getContext('2d');
+	windDirectionChart = new Chart(ctx, {
+		type: 'polarArea',
+		data: {
+			datasets: [{
+				backgroundColor: [
+					'rgba(255,0,0,0.5)',
+					'rgba(255,165,0,0.5)',
+					'rgba(255,255,0,0.5)',
+					'rgba(0,128,0,0.5)',
+					'rgba(0,0,255,0.5)',
+					'rgba(75,0,130,0.5)',
+					'rgba(238,130,238,0.5)',
+					'rgba(128,128,128,0.5)'
+				]
+			}]
+		},
+		options: {
+			responsive: false,
+			plugins: { legend: { position: 'bottom' } },
+			scale: {
+				ticks: {
+				  display: false
+				}
 			}
 		}
 	});
