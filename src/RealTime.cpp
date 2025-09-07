@@ -5,6 +5,8 @@
 #include <driver/rtc_io.h>
 #include <esp_log.h>
 #include <esp_sleep.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #include <chrono>
 #include <cstdint>
@@ -25,7 +27,9 @@
 
 namespace RealTime
 {
-    static RtcDS3231<TwoWire> rtc{Wire};
+    static RtcDS3231<TwoWire> rtc = {Wire};
+    static WiFiUDP udp = {};
+    static NTPClient ntp = {udp, "br.pool.ntp.org", -10800};
 
     static auto syncDateTime() -> void
     {
@@ -51,6 +55,8 @@ namespace RealTime
 
         startHardware();
         syncDateTime();
+
+        ntp.begin();
 
         log_d( "now = %s", Utils::DateTime::toString( std::chrono::system_clock::now() ).data() );
 

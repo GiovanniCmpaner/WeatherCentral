@@ -166,9 +166,6 @@ function updateWindSpeedChart(windSpeed)
 	windSpeedChart.update();
 }
 
-const directionsDegrees = [0, 45, 90, 135, 180, 225, 270, 315, 360];
-const directionsLabels  = ['N','NE','E','SE','S','SW','W','NW','N'];
-
 function directionPTtoAngle(dirPT) {
     switch (dirPT.toLowerCase()) {
         case 'norte':      return 0;
@@ -187,14 +184,16 @@ const directionsPT = ['Norte','Nordeste','Leste','Sudeste','Sul','Sudoeste','Oes
 
 function updateWindDirectionChart(windDirection)
 {
-    const angle = directionPTtoAngle(windDirection);
-    
-    // Determine which segment corresponds to the angle
-    const segmentSize = 360 / directionsPT.length; // 45°
-    const segmentIndex = Math.floor((angle + segmentSize/2) / segmentSize) % directionsPT.length;
+    const angle = directionPTtoAngle(windDirection); // 0–360°
 
-    // Fill data: 1 for selected segment, 0 for the rest
-    windDirectionChart.data.datasets[0].data = directionsPT.map((_, i) => i === segmentIndex ? 1 : 0);
+    // Each segment is 360° / 8 = 45°
+    const segmentIndex = Math.round(angle / 45) % 8;
+
+    // Build data array: 1 for selected segment, 0 for the rest
+    const dataValues = Array.from({length: 8}, (_, i) => i === segmentIndex ? 1 : 0);
+
+    // Update the PolarArea chart
+    windDirectionChart.data.datasets[0].data = dataValues;
     windDirectionChart.update();
 }
 
@@ -481,6 +480,7 @@ function createWindDirectionChart()
 			}]
 		},
 		options: {
+			
 			responsive: false,
 			plugins: { legend: { position: 'bottom' } },
 			scale: {

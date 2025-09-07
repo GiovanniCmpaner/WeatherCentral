@@ -42,14 +42,14 @@ static const Configuration defaultCfg
     .windDirection = {
         .threshoulds = {
             {
-                {WindDirection::SOUTHWEST, {  40,   65}},
-                {WindDirection::SOUTH,     {  66,  654}},
-                {WindDirection::WEST,      { 655, 1362}},
-                {WindDirection::SOUTHEAST, {1363, 1544}},
-                {WindDirection::NORTHWEST, {1545, 2484}},
-                {WindDirection::EAST,      {2485, 3168}},
-                {WindDirection::NORTH,     {3169, 3908}},
-                {WindDirection::NORTHEAST, {3909, 4095}},
+                {WindDirection::SOUTHWEST, {47, 52}},
+                {WindDirection::SOUTH,     {518, 572}},
+                {WindDirection::WEST,      {1078, 1192}},
+                {WindDirection::SOUTHEAST, {1222, 1351}},
+                {WindDirection::NORTHWEST, {1966, 2173}},
+                {WindDirection::EAST,      {2508, 2772}},
+                {WindDirection::NORTH,     {3094, 3420}},
+                {WindDirection::NORTHEAST, {3809, 4095}},
             }
         }
     },
