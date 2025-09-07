@@ -20,7 +20,7 @@ void setup()
     delay( 1000 );
     Serial.begin( 115200 );
     Serial.setDebugOutput( true );
-    
+
     log_d( "begin" );
 
     Peripherals::init();
@@ -32,8 +32,6 @@ void setup()
     Database::init();
     WebInterface::init();
     Infos::init();
-
-    digitalWrite(Peripherals::LED_HTB, HIGH);
 
     log_d( "end" );
 }
