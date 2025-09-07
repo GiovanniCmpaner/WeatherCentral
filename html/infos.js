@@ -483,6 +483,7 @@ function createWindDirectionChart()
 			
 			responsive: false,
 			plugins: { legend: { position: 'bottom' } },
+			startAngle: -112.5 * Math.PI / 180,
 			scale: {
 				ticks: {
 				  display: false
