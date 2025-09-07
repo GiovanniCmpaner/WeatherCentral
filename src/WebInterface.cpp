@@ -142,13 +142,13 @@ namespace WebInterface
                 {
                     if( index == 0 )
                     {
-                        ( *stream ) << "datetime" << ';'
-                                    << "temperature" << ';'
-                                    << "humidity" << ';'
-                                    << "pressure" << ';'
-                                    << "wind_speed" << ';'
-                                    << "wind_direction" << ';'
-                                    << "rain_intensity" << "\r\n";
+                        ( *stream ) << "datahora" << ';'
+                                    << "temperatura" << ';'
+                                    << "umidade" << ';'
+                                    << "pressao" << ';'
+                                    << "velocidade_vento" << ';'
+                                    << "direcao_vento" << ';'
+                                    << "tempo" << "\r\n";
                         len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
                     }
                     else

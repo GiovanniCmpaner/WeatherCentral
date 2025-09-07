@@ -171,7 +171,7 @@ function getData(filter) {
                 }
             }
 
-            successMessage("Data loaded");
+            successMessage("Dados");
             deferred.resolve(data.length);
         })
         .fail((xhr, status, error) => {

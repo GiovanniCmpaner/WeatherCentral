@@ -8,24 +8,24 @@
   <link rel="stylesheet" type="text/css" href="style.css">
   <script src="jquery.min.js.gz"></script>
   <script src="configuration.js"></script>
-  <title>WeatherCentral - Configuration</title>
+  <title>WeatherCentral - Configurações</title>
 </head>
 
 <body>
   <nav id="message"></nav>
   <nav id="menu">
-    <a href="/configuration.html">Configuration</a>
-    <a href="/infos.html">Infos</a>
-    <a href="/data.html">Data</a>
+    <a href="/configuration.html">Configurações</a>
+    <a href="/infos.html">Informações</a>
+    <a href="/data.html">Dados</a>
   </nav>
-  <h2> Configuration </h2>
+  <h2> Configurações </h2>
   <form id="firmware">
     <fieldset>
-      <legend> Firmware Binary </legend>
+      <legend> Firmware Binário </legend>
       <table>
         <tr>
           <td>
-            <label for="firmware_file"> File </label>
+            <label for="firmware_file"> Arquivo </label>
           </td>
           <td>
             <input type="file" id="firmware_file" accept=".bin" required>
@@ -37,11 +37,11 @@
   </form>
   <form id="configuration">
     <fieldset>
-      <legend> Configuration Json </legend>
+      <legend> Configuração Json </legend>
       <table>
         <tr>
           <td>
-            <label for="configuration_file"> File </label>
+            <label for="configuration_file"> Arquivo </label>
           </td>
           <td>
             <input type="file" id="configuration_file" accept=".json" required>
@@ -54,11 +54,11 @@
   </form>
   <form id="datetime">
     <fieldset>
-      <legend> Date Time </legend>
+      <legend> Data/Hora </legend>
       <table>
         <tr>
           <td>
-            <label for="datetime_current_date"> Current </label>
+            <label for="datetime_current_date"> Atual </label>
           </td>
           <td>
             <input type="date" id="datetime_current_date" readonly>
@@ -69,7 +69,7 @@
         </tr>
         <tr>
           <td>
-            <label for="datetime_new_date"> New </label>
+            <label for="datetime_new_date"> Novo </label>
           </td>
           <td>
             <input type="date" id="datetime_new_date">
@@ -84,11 +84,11 @@
   </form>
   <form id="wind_speed">
     <fieldset>
-      <legend>Wind Speed</legend>
+      <legend>Velocidade Vento</legend>
       <table>
         <tr>
           <td>
-            <label for="wind_speed_radius">Radius (m)</label>
+            <label for="wind_speed_radius">Raio (m)</label>
           </td>
           <td>
             <input type="number" id="wind_speed_radius" min="0.01" max="1.00" step="0.01" required>
@@ -100,11 +100,11 @@
   </form>
   <form id="wind_direction">
     <fieldset>
-      <legend>Wind Direction</legend>
+      <legend>Direção Vento</legend>
       <table>
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Nome</th>
             <th>Min</th>
             <th>Max</th>
           </tr>
@@ -131,11 +131,11 @@
   </form>
   <form id="rain_intensity">
     <fieldset>
-      <legend>Rain Intensity</legend>
+      <legend>Tempo</legend>
       <table>
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Nome</th>
             <th>Min</th>
             <th>Max</th>
           </tr>
@@ -162,11 +162,11 @@
   </form>
   <form id="access_point">
     <fieldset>
-      <legend> Access Point </legend>
+      <legend> Ponto Acesso </legend>
       <table>
         <tr>
           <td>
-            <label for="access_point_enabled"> Enabled </label>
+            <label for="access_point_enabled"> Habilitado </label>
           </td>
           <td>
             <input type="checkbox" id="access_point_enabled">
@@ -206,7 +206,7 @@
         </tr>
         <tr>
           <td>
-            <label for="access_point_port">Port</label>
+            <label for="access_point_port">Porta</label>
           </td>
           <td>
             <input type="number" id="access_point_port" min="1" max="65534" required>
@@ -214,7 +214,7 @@
         </tr>
         <tr>
           <td>
-            <label for="access_point_user">User</label>
+            <label for="access_point_user">Usuário</label>
           </td>
           <td>
             <input type="text" id="access_point_user" minlength="4" maxlength="32" required>
@@ -222,7 +222,7 @@
         </tr>
         <tr>
           <td>
-            <label for="access_point_password">Password</label>
+            <label for="access_point_password">Senha</label>
           </td>
           <td>
             <input type="text" id="access_point_password" minlength="8" maxlength="64" required>
@@ -230,7 +230,7 @@
         </tr>
         <tr>
           <td>
-            <label for="access_point_duration">Duration</label>
+            <label for="access_point_duration">Duração (s)</label>
           </td>
           <td>
             <input type="number" id="access_point_duration" min="10" max="99999" required>
@@ -242,11 +242,11 @@
   </form>
   <form id="station">
     <fieldset>
-      <legend>Station</legend>
+      <legend>Estação</legend>
       <table>
         <tr>
           <td>
-            <label for="station_enabled">Enabled</label>
+            <label for="station_enabled">Habilitado</label>
           </td>
           <td>
             <input type="checkbox" id="station_enabled">
@@ -286,7 +286,7 @@
         </tr>
         <tr>
           <td>
-            <label for="station_port">Port</label>
+            <label for="station_port">Porta</label>
           </td>
           <td>
             <input type="number" id="station_port" min="1" max="65534" required>
@@ -294,7 +294,7 @@
         </tr>
         <tr>
           <td>
-            <label for="station_user">User</label>
+            <label for="station_user">Usuário</label>
           </td>
           <td>
             <input type="text" id="station_user" minlength="4" maxlength="32" required>
@@ -302,7 +302,7 @@
         </tr>
         <tr>
           <td>
-            <label for="station_password">Password</label>
+            <label for="station_password">Senha</label>
           </td>
           <td>
             <input type="text" id="station_password" minlength="8" maxlength="64" required>

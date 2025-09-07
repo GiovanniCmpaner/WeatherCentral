@@ -81,7 +81,7 @@ function setDateTime() {
             infoMessage("Sending");
         }
     })
-        .done((dateTime) => {
+        .done((msg) => {
             successMessage(msg ?? "Datetime saved").then(() => reload());
             //deferred.resolve();
         })

@@ -8,25 +8,25 @@
   <link rel="stylesheet" type="text/css" href="style.css">
   <script src="jquery.min.js.gz"></script>
   <script src="data.js"></script>
-  <title>WeatherCentral - Data</title>
+  <title>WeatherCentral - Dados</title>
 </head>
 
 <body>
   <nav id="message"></nav>
   <nav id="menu">
-    <a href="/configuration.html">Configuration</a>
-    <a href="/infos.html">Infos</a>
-    <a href="/data.html">Data</a>
+    <a href="/configuration.html">Configurações</a>
+    <a href="/infos.html">Informações</a>
+    <a href="/data.html">Dados</a>
   </nav>
-  <h2> Data </h2>
+  <h2> Dados </h2>
   <fieldset>
-    <legend> Filter </legend>
+    <legend> Filtro </legend>
     <form id="filter">
       <table>
         <tbody>
           <tr>
             <td> 
-              <label for="filter_start_date"> Start </label> 
+              <label for="filter_start_date"> Início </label> 
             </td>
             <td> 
               <input type="date" id="filter_start_date"> 
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td> 
-              <label for="filter_end_date"> End </label> 
+              <label for="filter_end_date"> Fim </label> 
             </td>
             <td> 
               <input type="date" id="filter_end_date"> 
@@ -58,34 +58,34 @@
     <table id="result" class="responsive">
       <thead>
         <tr>
-          <th> Date </th>
-          <th> Time </th>
-          <th> Temperature (°C) </th>
-          <th> Humidity (%) </th>
+          <th> Data </th>
+          <th> Hora </th>
+          <th> Temperatura (°C) </th>
+          <th> Umidade (%) </th>
           <th> Pressure (hPa) </th>
-          <th> Wind Speed (km/h) </th>
-          <th> Wind Direction </th>
-          <th> Rain Intensity </th>
+          <th> Velocidade Vento (km/h) </th>
+          <th> Direção Vento </th>
+          <th> Tempo </th>
         </tr>
       </thead>
       <tbody>
         <template id="data_template">
           <tr>
-            <td> <label for="data_date"> Date </label> </td>
+            <td> <label for="data_date"> Data </label> </td>
             <td> <span id="data_date"></span> </td>
-            <td> <label for="data_time"> Time </label> </td>
+            <td> <label for="data_time"> Hora </label> </td>
             <td> <span id="data_time"></span> </td>
-            <td> <label for="data_temperature"> Temperature (°C) </label>
+            <td> <label for="data_temperature"> Temperatura (°C) </label>
             <td> <span id="data_temperature"></span> </td>
-            <td> <label for="data_humidity"> Humidity (%) </label> </td>
+            <td> <label for="data_humidity"> Umidade (%) </label> </td>
             <td> <span id="data_humidity"></span> </td>
             <td> <label for="data_pressure"> Pressure (hPa) </label> </td>
             <td> <span id="data_pressure"></span> </td>
-            <td> <label for="data_wind_speed"> Wind Speed (km/h) </label> </td>
+            <td> <label for="data_wind_speed"> Velocidade Vento (km/h) </label> </td>
             <td> <span id="data_wind_speed"></span> </td>
-            <td> <label for="data_wind_direction"> Wind Direction </label> </td>
+            <td> <label for="data_wind_direction"> Direção Vento </label> </td>
             <td> <span id="data_wind_direction"></span> </td>
-            <td> <label for="data_rain_intensity"> Rain Intensity </label> </td>
+            <td> <label for="data_rain_intensity"> Tempo </label> </td>
             <td> <span id="data_rain_intensity"></span> </td>
           </tr>
         </template>
