@@ -83,12 +83,14 @@ function setWindSpeed() {
 
 function setWindDirection() {
     var cfg = {
-        wind_direction: []
+        wind_direction: {
+            threshoulds: {}
+        }
     };
 
     $("#wind_direction tbody tr").each((i, s) => {
-        var name = $(`#wind_direction_name_${i}`).prop("value");
-        cfg.wind_direction[name] = {
+        var name = $(`#wind_direction_name_${i}`).text();
+        cfg.wind_direction.threshoulds[name] = {
             min: parseFloat($(`#wind_direction_min_${i}`).prop("value")),
             max: parseFloat($(`#wind_direction_max_${i}`).prop("value")),
         }
@@ -99,12 +101,14 @@ function setWindDirection() {
 
 function setRainIntensity() {
     var cfg = {
-        rain_intensity: []
+        rain_intensity: {
+            threshoulds: {}
+        }
     };
 
     $("#rain_intensity tbody tr").each((i, s) => {
-        var name = $(`#rain_intensity_name_${i}`).prop("value");
-        cfg.rain_intensity[name] = {
+        var name = $(`#rain_intensity_name_${i}`).text();
+        cfg.rain_intensity.threshoulds[name] = {
             min: parseFloat($(`#rain_intensity_min_${i}`).prop("value")),
             max: parseFloat($(`#rain_intensity_max_${i}`).prop("value")),
         }
@@ -210,11 +214,11 @@ function getConfiguration() {
             
             {
                 var template = $($.parseHTML($("#wind_direction_template").html()));
-                for (const [i, s] of Object.entries(cfg.wind_direction.threshoulds)) {
+                for (const [i, s] of Object.entries(cfg.wind_direction.threshoulds).entries()) {
                     var row = template.clone();
-                    row.find("#wind_direction_name").text(i);
-                    row.find("#wind_direction_min").prop("value", s.min);
-                    row.find("#wind_direction_max").prop("value", s.max);
+                    row.find("#wind_direction_name").text(s[0]);
+                    row.find("#wind_direction_min").prop("value", s[1].min);
+                    row.find("#wind_direction_max").prop("value", s[1].max);
                     for (var c of row.find("*")) {
                         if (c.id) {
                             c.id += `_${i}`;
@@ -229,11 +233,11 @@ function getConfiguration() {
 
             {
                 var template = $($.parseHTML($("#rain_intensity_template").html()));
-                for (const [i, s] of Object.entries(cfg.rain_intensity.threshoulds)) {
+                for (const [i, s] of Object.entries(cfg.rain_intensity.threshoulds).entries()) {
                     var row = template.clone();
-                    row.find("#rain_intensity_name").text(i);
-                    row.find("#rain_intensity_min").prop("value", s.min);
-                    row.find("#rain_intensity_max").prop("value", s.max);
+                    row.find("#rain_intensity_name").text(s[0]);
+                    row.find("#rain_intensity_min").prop("value", s[1].min);
+                    row.find("#rain_intensity_max").prop("value", s[1].max);
                     for (var c of row.find("*")) {
                         if (c.id) {
                             c.id += `_${i}`;

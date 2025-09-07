@@ -23,24 +23,7 @@
 #include "WebInterface.hpp"
 #include "Utils.hpp"
 #include "Infos.hpp"
-
-extern const uint8_t configuration_html_start[] asm( "_binary_html_configuration_html_start" );
-extern const uint8_t configuration_js_start[] asm( "_binary_html_configuration_js_start" );
-extern const uint8_t data_html_start[] asm( "_binary_html_data_html_start" );
-extern const uint8_t data_js_start[] asm( "_binary_html_data_js_start" );
-extern const uint8_t jquery_min_js_start[] asm( "_binary_html_jquery_min_js_start" );
-extern const uint8_t infos_html_start[] asm( "_binary_html_infos_html_start" );
-extern const uint8_t infos_js_start[] asm( "_binary_html_infos_js_start" );
-extern const uint8_t style_css_start[] asm( "_binary_html_style_css_start" );
-
-extern const uint8_t configuration_html_end[] asm( "_binary_html_configuration_html_end" );
-extern const uint8_t configuration_js_end[] asm( "_binary_html_configuration_js_end" );
-extern const uint8_t data_html_end[] asm( "_binary_html_data_html_end" );
-extern const uint8_t data_js_end[] asm( "_binary_html_data_js_end" );
-extern const uint8_t jquery_min_js_end[] asm( "_binary_html_jquery_min_js_end" );
-extern const uint8_t infos_html_end[] asm( "_binary_html_infos_html_end" );
-extern const uint8_t infos_js_end[] asm( "_binary_html_infos_js_end" );
-extern const uint8_t style_css_end[] asm( "_binary_html_style_css_end" );
+#include "Files.hpp"
 
 namespace WebInterface
 {
@@ -135,25 +118,21 @@ namespace WebInterface
 
         static auto handleConfigurationHtml( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "text/html", configuration_html_start, static_cast<size_t>( configuration_html_end - configuration_html_start ) );
             request->send_P( 200, "text/html", configuration_html_start, static_cast<size_t>( configuration_html_end - configuration_html_start ) );
         }
 
         static auto handleConfigurationJs( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "application/javascript", configuration_js_start, static_cast<size_t>( configuration_js_end - configuration_js_start ) );
             request->send_P( 200, "application/javascript", configuration_js_start, static_cast<size_t>( configuration_js_end - configuration_js_start ) );
         }
 
         static auto handleDataHtml( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "text/html", data_html_start, static_cast<size_t>( data_html_end - data_html_start ) );
             request->send_P( 200, "text/html", data_html_start, static_cast<size_t>( data_html_end - data_html_start ) );
         }
 
         static auto handleDataJs( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "application/javascript", data_js_start, static_cast<size_t>( data_js_end - data_js_start ) );
             request->send_P( 200, "application/javascript", data_js_start, static_cast<size_t>( data_js_end - data_js_start ) );
         }
 
@@ -212,27 +191,32 @@ namespace WebInterface
             log_d( "end" );
         }
 
-        static auto handleJqueryJs( AsyncWebServerRequest* request ) -> void
+        static auto handleJqueryJsGz( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "application/javascript", jquery_min_js_start, static_cast<size_t>( jquery_min_js_end - jquery_min_js_start ) );
-            request->send_P( 200, "application/javascript", jquery_min_js_start, static_cast<size_t>( jquery_min_js_end - jquery_min_js_start ) );
+            auto response = request->beginResponse_P(200, "application/javascript", jquery_min_js_gz_start, static_cast<size_t>(jquery_min_js_gz_end - jquery_min_js_gz_start));
+            response->addHeader("Content-Encoding", "gzip");
+            request->send(response);
+        }
+
+        static auto handleChartMinJsGz(AsyncWebServerRequest *request) -> void
+        {
+            auto response{request->beginResponse_P(200, "application/javascript", chart_min_js_gz_start, static_cast<size_t>(chart_min_js_gz_end - chart_min_js_gz_start))};
+            response->addHeader("Content-Encoding", "gzip");
+            request->send(response);
         }
 
         static auto handleInfosHtml( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "text/html", infos_html_start, static_cast<size_t>( infos_html_end - infos_html_start ) );
             request->send_P( 200, "text/html", infos_html_start, static_cast<size_t>( infos_html_end - infos_html_start ) );
         }
 
         static auto handleInfosJs( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "application/javascript", infos_js_start, static_cast<size_t>( infos_js_end - infos_js_start ) );
             request->send_P( 200, "application/javascript", infos_js_start, static_cast<size_t>( infos_js_end - infos_js_start ) );
         }
 
         static auto handleStyleCss( AsyncWebServerRequest* request ) -> void
         {
-            //handleProgmem( request, "text/css", style_css_start, static_cast<size_t>( style_css_end - style_css_start ) );
             request->send_P( 200, "text/css", style_css_start, static_cast<size_t>( style_css_end - style_css_start ) );
         }
 
@@ -365,7 +349,8 @@ namespace WebInterface
             server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
             server->on( "/data.js", HTTP_GET, Get::handleDataJs );
             server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
-            server->on( "/jquery.min.js", HTTP_GET, Get::handleJqueryJs );
+            server->on("/jquery.min.js.gz", HTTP_GET, Get::handleJqueryJsGz);
+            server->on("/chart.min.js.gz", HTTP_GET, Get::handleChartMinJsGz);
             server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
             server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
             server->on( "/style.css", HTTP_GET, Get::handleStyleCss );

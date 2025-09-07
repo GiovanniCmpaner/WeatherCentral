@@ -152,7 +152,7 @@ namespace Database
         log_d( "end" );
     }
 
-    auto process(const std::chrono::system_clock::time_point& syncTimer) -> void
+    auto process() -> void
     {
         Utils::bound( std::chrono::minutes( 15 ), Database::generate );
     }
