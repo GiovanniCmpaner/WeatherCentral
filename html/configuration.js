@@ -72,7 +72,7 @@ function setDateTime() {
 
     $.ajax({
         type: "POST",
-        url: "/datetime.json",
+        url: `http://${window.location.host || "192.168.1.200"}/datetime.json`,
         contentType: 'application/json',
         timeout: 5000,
         data: JSON.stringify(newDateTime),
@@ -179,7 +179,7 @@ function setConfiguration(cfg) {
 
     $.ajax({
         type: "POST",
-        url: "/configuration.json",
+        url: `http://${window.location.host || "192.168.1.200"}/configuration.json`,
         contentType: 'application/json',
         timeout: 5000,
         data: JSON.stringify(cfg),
@@ -207,7 +207,7 @@ function getConfiguration() {
     var deferred = new $.Deferred();
     $.ajax({
         type: "GET",
-        url: "/configuration.json",
+        url: `http://${window.location.host || "192.168.1.200"}/configuration.json`,
         accepts: 'application/json',
         timeout: 5000,
         beforeSend: () => {
@@ -292,7 +292,7 @@ function getDateTime() {
     var deferred = new $.Deferred();
     $.ajax({
         type: "GET",
-        url: "/datetime.json",
+        url: `http://${window.location.host || "192.168.1.200"}/datetime.json`,
         accepts: 'application/json',
         timeout: 5000,
         beforeSend: () => {
@@ -343,7 +343,7 @@ function uploadFirmware() {
         $.ajax(
             {
                 type: "POST",
-                url: "/firmware.bin",
+                url: `http://${window.location.host || "192.168.1.200"}/firmware.bin`,
                 contentType: false,
                 processData: false,
                 data: formData,
@@ -385,7 +385,7 @@ function uploadConfiguration() {
         $.ajax(
             {
                 type: "POST",
-                url: "/configuration.json",
+                url: `http://${window.location.host || "192.168.1.200"}/configuration.json`,
                 contentType: false,
                 processData: false,
                 data: formData,
