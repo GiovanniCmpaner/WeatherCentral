@@ -129,7 +129,7 @@ namespace Database
         Utils::bound( std::chrono::minutes( 15 ), Database::generate );
     }
 
-    Filter::Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, uint32_t limit )
+    Filter::Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end )
     {
         const auto query = " SELECT                                       "
                            "     DATE_TIME,                               "
@@ -145,8 +145,7 @@ namespace Database
                            "         ( DATE_TIME >= IFNULL(?,DATE_TIME) ) "
                            "     AND ( DATE_TIME <= IFNULL(?,DATE_TIME) ) "
                            " ORDER BY                                     "
-                           "     DATE_TIME ASC                            "
-                           " LIMIT ?                                      ";
+                           "     DATE_TIME ASC                            ";
 
         const auto rc{sqlite3_prepare_v2( db, query, strlen( query ), &this->res, nullptr )};
         if ( rc != SQLITE_OK )
@@ -164,8 +163,6 @@ namespace Database
             {
                 sqlite3_bind_int64( this->res, 2, std::chrono::system_clock::to_time_t( end ) );
             }
-            
-            sqlite3_bind_int( this->res, 3, limit );
         }
     }
 

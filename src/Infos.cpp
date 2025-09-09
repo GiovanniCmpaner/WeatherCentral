@@ -35,7 +35,7 @@ namespace Infos
 
     static IRAM_ATTR auto windSpeedCalculate() -> void 
     {
-        Infos::windSpeed = Infos::windSpeedCounter.exchange(0) * (2.0 * M_PI * cfg.windSpeed.radius) * 3.6;
+        Infos::windSpeed = Infos::windSpeedCounter.exchange(0) * (2.0 * M_PI * cfg.windSpeed.radius) * 3.6 / 3;
     }
 
     static IRAM_ATTR auto windSpeedCount() -> void 
@@ -52,7 +52,7 @@ namespace Infos
 
         windSpeedTimer = timerBegin(0, 80, true);
         timerAttachInterrupt(windSpeedTimer, Infos::windSpeedCalculate, false);
-        timerAlarmWrite(windSpeedTimer, 1000000, true);
+        timerAlarmWrite(windSpeedTimer, 3000000, true);
         timerAlarmEnable(windSpeedTimer);
 
         attachInterrupt(Peripherals::WIND_SPEED, Infos::windSpeedCount, FALLING);

@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="data:,">
   <link rel="stylesheet" type="text/css" href="style.css">
-  <script src="jquery.min.js.gz"></script>
+  <script src="jquery.min.js"></script>
+  <script src="chart.min.js"></script>
   <script src="data.js"></script>
   <title>WeatherCentral - Dados</title>
 </head>
@@ -54,7 +55,38 @@
     </form>
   </fieldset>
   <fieldset>
-    <legend> Result </legend>
+    <legend> Gráficos </legend>
+    <table>
+      <tr>
+        <td>
+          <fieldset>
+            <legend>Gráfico Temperatura (°C)</legend>
+            <canvas id="temperature_chart" width="300" height="300"></canvas>
+          </fieldset>
+        </td>
+        <td>
+          <fieldset>
+            <legend>Gráfico Umidade (%)</legend>
+            <canvas id="humidity_chart" width="300" height="300"></canvas>
+          </fieldset>
+        </td>
+        <td>
+          <fieldset>
+            <legend>Gráfico Pressão (hPa)</legend>
+            <canvas id="pressure_chart" width="300" height="300"></canvas>
+          </fieldset>
+        </td>
+        <td>
+          <fieldset>
+            <legend>Gráfico Velocidade Vento (km/h)</legend>
+            <canvas id="wind_speed_chart" width="300" height="300"></canvas>
+          </fieldset>
+        </td>
+      </tr>
+    </table>
+  </fieldset>
+  <fieldset>
+    <legend> Resultado </legend>
     <table id="result" class="responsive">
       <thead>
         <tr>

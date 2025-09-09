@@ -1,7 +1,4 @@
 $(document).ready(() => {
-	createTemperatureChart();
-	createHumidityChart();
-	createPressureChart();
 	createWindSpeedChart();
 	createWindDirectionChart();
 	connectWsSensors();
@@ -19,7 +16,7 @@ function connectWsSensors() {
 
 	infoMessage("Socket connecting");
 
-	wsSensors = new WebSocket(`ws://${window.location.host}/sensors.ws`);
+	wsSensors = new WebSocket(`ws://${window.location.host || "192.168.1.200"}/sensors.ws`);
 	wsSensors.onopen = (evt) => {
 		deferred.resolve(wsSensors);
 		successMessage("Socket opened").then(() => clearMessage());
@@ -66,62 +63,8 @@ function updateValues(sensors) {
 }
 
 function updateCharts(sensors) {
-	updateTemperatureChart(sensors.temperature);
-	updateHumidityChart(sensors.humidity);
-	updatePressureChart(sensors.pressure);
 	updateWindSpeedChart(sensors.wind_speed);
 	updateWindDirectionChart(sensors.wind_direction);
-}
-
-function updateTemperatureChart(temperature) {
-	temperatureChart.data.labels.push(Date.now());
-	if (temperatureChart.data.labels.length > 100) {
-		temperatureChart.data.labels.shift();
-	}
-
-	temperatureChart.data.datasets[0].data.push(temperature);
-
-	temperatureChart.data.datasets.forEach((dataset) => {
-		if (dataset.data.length > 100) {
-			dataset.data.shift();
-		}
-	});
-
-	temperatureChart.update();
-}
-
-function updateHumidityChart(humidity) {
-	humidityChart.data.labels.push(Date.now());
-	if (humidityChart.data.labels.length > 100) {
-		humidityChart.data.labels.shift();
-	}
-
-	humidityChart.data.datasets[0].data.push(humidity);
-
-	humidityChart.data.datasets.forEach((dataset) => {
-		if (dataset.data.length > 100) {
-			dataset.data.shift();
-		}
-	});
-
-	humidityChart.update();
-}
-
-function updatePressureChart(pressure) {
-	pressureChart.data.labels.push(Date.now());
-	if (pressureChart.data.labels.length > 100) {
-		pressureChart.data.labels.shift();
-	}
-
-	pressureChart.data.datasets[0].data.push(pressure);
-
-	pressureChart.data.datasets.forEach((dataset) => {
-		if (dataset.data.length > 100) {
-			dataset.data.shift();
-		}
-	});
-
-	pressureChart.update();
 }
 
 function updateWindSpeedChart(windSpeed) {
@@ -169,200 +112,6 @@ function updateWindDirectionChart(windDirection) {
 	// Update the PolarArea chart
 	windDirectionChart.data.datasets[0].data = dataValues;
 	windDirectionChart.update();
-}
-
-function createTemperatureChart() {
-	let ctx = document.getElementById('temperature_chart').getContext('2d');
-	temperatureChart = new Chart(ctx,
-		{
-			type: 'line',
-			data:
-			{
-				datasets: [
-					{
-						pointBackgroundColor: 'red',
-						borderColor: 'red'
-					}]
-			},
-			options:
-			{
-				responsive: false,
-				tooltips:
-				{
-					enabled: false
-				},
-				hover:
-				{
-					mode: null
-				},
-				spanGaps: true,
-				scales:
-				{
-					yAxes: [
-						{
-							ticks:
-							{
-								suggestedMin: 0,
-								suggestedMax: 40
-							}
-						}],
-					xAxes: [
-						{
-							gridLines:
-							{
-								drawOnChartArea: false
-							},
-							ticks:
-							{
-								display: false
-							}
-						}]
-				},
-				elements:
-				{
-					line:
-					{
-						fill: false
-					},
-					point:
-					{
-						radius: 1
-					}
-				},
-				legend: {
-					display: false
-				}
-			}
-		});
-}
-function createHumidityChart() {
-	let ctx = document.getElementById('humidity_chart').getContext('2d');
-	humidityChart = new Chart(ctx,
-		{
-			type: 'line',
-			data:
-			{
-				datasets: [
-					{
-						pointBackgroundColor: 'green',
-						borderColor: 'green'
-					}]
-			},
-			options:
-			{
-				responsive: false,
-				tooltips:
-				{
-					enabled: false
-				},
-				hover:
-				{
-					mode: null
-				},
-				spanGaps: true,
-				scales:
-				{
-					yAxes: [
-						{
-							ticks:
-							{
-								suggestedMin: 0,
-								suggestedMax: 100
-							}
-						}],
-					xAxes: [
-						{
-							gridLines:
-							{
-								drawOnChartArea: false
-							},
-							ticks:
-							{
-								display: false
-							}
-						}]
-				},
-				elements:
-				{
-					line:
-					{
-						fill: false
-					},
-					point:
-					{
-						radius: 1
-					}
-				},
-				legend: {
-					display: false
-				}
-			}
-		});
-}
-
-function createPressureChart() {
-	let ctx = document.getElementById('pressure_chart').getContext('2d');
-	pressureChart = new Chart(ctx,
-		{
-			type: 'line',
-			data:
-			{
-				datasets: [
-					{
-						pointBackgroundColor: 'blue',
-						borderColor: 'blue'
-					}]
-			},
-			options:
-			{
-				responsive: false,
-				tooltips:
-				{
-					enabled: false
-				},
-				hover:
-				{
-					mode: null
-				},
-				spanGaps: true,
-				scales:
-				{
-					yAxes: [
-						{
-							ticks:
-							{
-								suggestedMin: 800,
-								suggestedMax: 1100
-							}
-						}],
-					xAxes: [
-						{
-							gridLines:
-							{
-								drawOnChartArea: false
-							},
-							ticks:
-							{
-								display: false
-							}
-						}]
-				},
-				elements:
-				{
-					line:
-					{
-						fill: false
-					},
-					point:
-					{
-						radius: 1
-					}
-				},
-				legend: {
-					display: false
-				}
-			}
-		});
 }
 
 function createWindSpeedChart() {

@@ -35,7 +35,7 @@ namespace WebInterface
 
     static AsyncWebSocket sensorsWs = {"/sensors.ws"};
 
-    static auto buildFilter( AsyncWebServerRequest* request, uint32_t limit ) -> Database::Filter
+    static auto buildFilter( AsyncWebServerRequest* request ) -> Database::Filter
     {
         auto start = std::chrono::system_clock::time_point::min();
         auto end = std::chrono::system_clock::time_point::max();
@@ -49,7 +49,7 @@ namespace WebInterface
             end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
         }
 
-        return Database::Filter{start, end, limit};
+        return Database::Filter{start, end};
     }
 
     namespace Get
@@ -71,7 +71,7 @@ namespace WebInterface
             auto& responseJson{response->getRoot()};
 
             {
-                auto filter = WebInterface::buildFilter( request, 20 );
+                auto filter = WebInterface::buildFilter( request );
                 while(true)
                 {
                     const auto sensorData = filter.next();
@@ -130,7 +130,7 @@ namespace WebInterface
 
         static auto handleDataCsv( AsyncWebServerRequest* request ) -> void
         {
-            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request, UINT32_MAX ) );
+            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request ) );
 
             auto stream = std::make_shared<std::stringstream>();
             stream->imbue(loc);
@@ -175,14 +175,14 @@ namespace WebInterface
 
         }
 
-        static auto handleJqueryMinJsGz( AsyncWebServerRequest* request ) -> void
+        static auto handleJqueryMinJs( AsyncWebServerRequest* request ) -> void
         {
             auto response = request->beginResponse_P(200, "application/javascript", jquery_min_js_gz_start, static_cast<size_t>(jquery_min_js_gz_end - jquery_min_js_gz_start));
             response->addHeader("Content-Encoding", "gzip");
             request->send(response);
         }
 
-        static auto handleChartMinJsGz(AsyncWebServerRequest *request) -> void
+        static auto handleChartMinJs(AsyncWebServerRequest *request) -> void
         {
             auto response{request->beginResponse_P(200, "application/javascript", chart_min_js_gz_start, static_cast<size_t>(chart_min_js_gz_end - chart_min_js_gz_start))};
             response->addHeader("Content-Encoding", "gzip");
@@ -420,8 +420,8 @@ namespace WebInterface
             server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
             server->on( "/data.js", HTTP_GET, Get::handleDataJs );
             server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
-            server->on("/jquery.min.js.gz", HTTP_GET, Get::handleJqueryMinJsGz);
-            server->on("/chart.min.js.gz", HTTP_GET, Get::handleChartMinJsGz);
+            server->on("/jquery.min.js", HTTP_GET, Get::handleJqueryMinJs);
+            server->on("/chart.min.js", HTTP_GET, Get::handleChartMinJs);
             server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
             server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
             server->on( "/style.css", HTTP_GET, Get::handleStyleCss );

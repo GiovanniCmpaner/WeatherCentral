@@ -1,7 +1,17 @@
 $(document).ready(() => {
+    createTemperatureChart();
+	createHumidityChart();
+	createPressureChart();
+	createWindSpeedChart();
     handleFilter();
-    getDateTime().done(() => handleLoadMore());
+    getDateTime();
+    getData().then(() => clearMessage());
 });
+
+let temperatureChart;
+let humidityChart;
+let pressureChart;
+let windSpeedChart;;
 
 function handleFilter() {
     $("#filter_button").click((event) => {
@@ -14,7 +24,7 @@ function handleFilter() {
         event.preventDefault();
         if ($("#filter")[0].checkValidity()) {
             if ($("#filter").prop("action").endsWith("filter")) {
-                handleLoadMore();
+                getData().then(() => clearMessage());
             }
             else if ($("#filter").prop("action").endsWith("download")) {
                 handleDownload();
@@ -25,65 +35,17 @@ function handleFilter() {
 
 function handleDownload() {
     var filter = buildfilter();
-    if (filter) {
-        window.location = `/data.csv?${new URLSearchParams(filter).toString()}`;
-    }
-    else {
-        window.location = `/data.csv`;
-    }
-}
-
-function handleLoadMore(withoutFilter) {
-    $(window).unbind("scroll");
-    clearTimeout(this.updateHandle);
-
-    getData(withoutFilter ? null : buildfilter())
-        .done((count) => {
-            if (count == 20) {
-                $(window).scroll(() => {
-                    if ($(window).height() + $(window).scrollTop() > $("body").height() * 0.75) {
-                        $(window).unbind("scroll");
-                        handleLoadMore(true);
-                    }
-                });
-            }
-            else {
-                this.updateHandle = setTimeout(() => handleLoadMore(true), 30000);
-            }
-        })
-        .then(clearMessage);
+    window.location = `/data.csv?${new URLSearchParams(filter).toString()}`;
 }
 
 function getDateTime() {
-    var deferred = new $.Deferred();
-    $.ajax({
-        type: "GET",
-        url: "/datetime.json",
-        accepts: 'application/json',
-        timeout: 5000,
-        beforeSend: () => {
-            $("#filter :input").prop("disabled", true);
-            infoMessage("Loading");
-        }
-    })
-        .done((dateTime) => {
-            var [date, time] = dateTime.split(" ");
-            $("#filter_start_date").val(date);
-            $("#filter_start_time").val("00:00:00");
-            $("#filter_end_date").val(date);
-            $("#filter_end_time").val("23:59:59");
 
-            successMessage("Done");
-            deferred.resolve(new Date(dateTime));
-        })
-        .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
-            deferred.reject();
-        })
-        .always(() => {
-            $("#filter :input").prop("disabled", false);
-        });
-    return deferred.promise();
+    var now = new Date().toISOString();
+    var [date, time] = now.split("T");
+    $("#filter_start_date").val(date);
+    $("#filter_start_time").val("00:00:00");
+    $("#filter_end_date").val(date);
+    $("#filter_end_time").val("23:59:59");
 }
 
 function buildfilter() {
@@ -111,17 +73,9 @@ function buildfilter() {
 function getData(filter) {
     var deferred = new $.Deferred();
 
-    var clear = true;
-    if (filter == null) {
-        clear = false;
-        if (typeof this.prevFilter != "undefined") {
-            filter = this.prevFilter;
-        }
-    }
-
     $.ajax({
         type: "GET",
-        url: "/data.json",
+        url: `http://${window.location.host || "192.168.1.200"}/data.json`,
         accepts: 'application/json',
         timeout: 5000,
         data: filter,
@@ -131,11 +85,7 @@ function getData(filter) {
         }
     })
         .done((data) => {
-            if (clear) {
-                $("#result tbody tr").remove();
-            }
-
-            let lastDateTime = null;
+            $("#result tbody tr").remove();
 
             let template = $($.parseHTML($("#data_template").html()));
             for (const [i, d] of data.entries()) {
@@ -158,21 +108,12 @@ function getData(filter) {
                     }
                 }
                 row.appendTo($("#result tbody"));
-                lastDateTime = Math.max(lastDateTime, d.id);
             }
 
-            this.prevFilter = filter;
-            if (lastDateTime != null) {
-                if (this.prevFilter != null) {
-                    this.prevFilter.start = lastDateTime + 1;
-                }
-                else {
-                    this.prevFilter = { id: lastDateTime + 1 };
-                }
-            }
+            updateCharts(data);
 
-            successMessage("Dados");
-            deferred.resolve(data.length);
+            successMessage("Dados carregados");
+            deferred.resolve();
         })
         .fail((xhr, status, error) => {
             errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
@@ -182,6 +123,287 @@ function getData(filter) {
             $("#filter :input").prop("disabled", false);
         });
     return deferred.promise();
+}
+
+function createTemperatureChart() {
+	let ctx = document.getElementById('temperature_chart').getContext('2d');
+	temperatureChart = new Chart(ctx,
+		{
+			type: 'line',
+			data:
+			{
+				datasets: [
+					{
+						pointBackgroundColor: 'red',
+						borderColor: 'red'
+					}]
+			},
+			options:
+			{
+				responsive: false,
+				tooltips:
+				{
+					enabled: false
+				},
+				hover:
+				{
+					mode: null
+				},
+				spanGaps: true,
+				scales:
+				{
+					yAxes: [
+						{
+							ticks:
+							{
+								suggestedMin: 0,
+								suggestedMax: 40
+							}
+						}],
+					xAxes: [
+						{
+							gridLines:
+							{
+								drawOnChartArea: false
+							},
+							ticks:
+							{
+								display: false
+							}
+						}]
+				},
+				elements:
+				{
+					line:
+					{
+						fill: false
+					},
+					point:
+					{
+						radius: 1
+					}
+				},
+				legend: {
+					display: false
+				}
+			}
+		});
+}
+
+function createHumidityChart() {
+	let ctx = document.getElementById('humidity_chart').getContext('2d');
+	humidityChart = new Chart(ctx,
+		{
+			type: 'line',
+			data:
+			{
+				datasets: [
+					{
+						pointBackgroundColor: 'green',
+						borderColor: 'green'
+					}]
+			},
+			options:
+			{
+				responsive: false,
+				tooltips:
+				{
+					enabled: false
+				},
+				hover:
+				{
+					mode: null
+				},
+				spanGaps: true,
+				scales:
+				{
+					yAxes: [
+						{
+							ticks:
+							{
+								suggestedMin: 0,
+								suggestedMax: 100
+							}
+						}],
+					xAxes: [
+						{
+							gridLines:
+							{
+								drawOnChartArea: false
+							},
+							ticks:
+							{
+								display: false
+							}
+						}]
+				},
+				elements:
+				{
+					line:
+					{
+						fill: false
+					},
+					point:
+					{
+						radius: 1
+					}
+				},
+				legend: {
+					display: false
+				}
+			}
+		});
+}
+
+function createPressureChart() {
+	let ctx = document.getElementById('pressure_chart').getContext('2d');
+	pressureChart = new Chart(ctx,
+		{
+			type: 'line',
+			data:
+			{
+				datasets: [
+					{
+						pointBackgroundColor: 'blue',
+						borderColor: 'blue'
+					}]
+			},
+			options:
+			{
+				responsive: false,
+				tooltips:
+				{
+					enabled: false
+				},
+				hover:
+				{
+					mode: null
+				},
+				spanGaps: true,
+				scales:
+				{
+					yAxes: [
+						{
+							ticks:
+							{
+								suggestedMin: 800,
+								suggestedMax: 1100
+							}
+						}],
+					xAxes: [
+						{
+							gridLines:
+							{
+								drawOnChartArea: false
+							},
+							ticks:
+							{
+								display: false
+							}
+						}]
+				},
+				elements:
+				{
+					line:
+					{
+						fill: false
+					},
+					point:
+					{
+						radius: 1
+					}
+				},
+				legend: {
+					display: false
+				}
+			}
+		});
+}
+
+function createWindSpeedChart() {
+	let ctx = document.getElementById('wind_speed_chart').getContext('2d');
+	windSpeedChart = new Chart(ctx,
+		{
+			type: 'line',
+			data:
+			{
+				datasets: [
+					{
+						pointBackgroundColor: 'purple',
+						borderColor: 'purple'
+					}]
+			},
+			options:
+			{
+				responsive: false,
+				tooltips:
+				{
+					enabled: false
+				},
+				hover:
+				{
+					mode: null
+				},
+				spanGaps: true,
+				scales:
+				{
+					yAxes: [
+						{
+							ticks:
+							{
+								suggestedMin: 0,
+								suggestedMax: 30
+							}
+						}],
+					xAxes: [
+						{
+							gridLines:
+							{
+								drawOnChartArea: false
+							},
+							ticks:
+							{
+								display: false
+							}
+						}]
+				},
+				elements:
+				{
+					line:
+					{
+						fill: false
+					},
+					point:
+					{
+						radius: 1
+					}
+				},
+				legend: {
+					display: false
+				}
+			}
+		});
+}
+
+function updateCharts(data) {
+
+    temperatureChart.data.labels = data.map(d => d.datetime);
+    temperatureChart.data.datasets[0].data = data.map(d => d.temperature);
+    temperatureChart.update();
+
+    humidityChart.data.labels = data.map(d => d.datetime);
+    humidityChart.data.datasets[0].data = data.map(d => d.humidity);
+    humidityChart.update();
+
+    pressureChart.data.labels = data.map(d => d.datetime);
+    pressureChart.data.datasets[0].data = data.map(d => d.pressure);
+    pressureChart.update();
+
+    windSpeedChart.data.labels = data.map(d => d.datetime);
+    windSpeedChart.data.datasets[0].data = data.map(d => d.wind_speed);
+    windSpeedChart.update();
+
+	//updateWindDirectionChart(sensors.wind_direction);
 }
 
 function clearMessage() {
