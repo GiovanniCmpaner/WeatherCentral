@@ -86,7 +86,7 @@ function setDateTime() {
             //deferred.resolve();
         })
         .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
             enableInput();
             deferred.reject();
         })
@@ -193,7 +193,7 @@ function setConfiguration(cfg) {
             //deferred.resolve();
         })
         .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
             enableInput();
             deferred.reject();
         })
@@ -279,7 +279,7 @@ function getConfiguration() {
             deferred.resolve();
         })
         .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
             deferred.reject();
         })
         .always(() => {
@@ -319,7 +319,7 @@ function getDateTime() {
             deferred.resolve(current);
         })
         .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+            errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
             deferred.reject();
         })
         .always(() => {
@@ -358,7 +358,7 @@ function uploadFirmware() {
                 //deferred.resolve();
             })
             .fail((xhr, status, error) => {
-                errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+                errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
                 deferred.reject();
             });
         //.always(() =>
@@ -400,7 +400,7 @@ function uploadConfiguration() {
                 //deferred.resolve();
             })
             .fail((xhr, status, error) => {
-                errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+                errorMessage(status == "timeout" ? "Erro: Timeout" : `Erro: ${xhr.status} ${xhr.statusText}`);
                 deferred.reject();
             });
         //.always(() =>

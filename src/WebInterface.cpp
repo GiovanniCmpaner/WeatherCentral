@@ -35,7 +35,7 @@ namespace WebInterface
 
     static AsyncWebSocket sensorsWs = {"/sensors.ws"};
 
-    static auto buildFilter( AsyncWebServerRequest* request ) -> Database::Filter
+    static auto buildFilter( AsyncWebServerRequest* request, uint32_t limit ) -> Database::Filter
     {
         auto start = std::chrono::system_clock::time_point::min();
         auto end = std::chrono::system_clock::time_point::max();
@@ -49,7 +49,7 @@ namespace WebInterface
             end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
         }
 
-        return Database::Filter{start, end};
+        return Database::Filter{start, end, limit};
     }
 
     namespace Get
@@ -60,28 +60,6 @@ namespace WebInterface
             auto& responseJson{response->getRoot()};
 
             cfg.serialize( responseJson );
-
-            response->setLength();
-            request->send( response );
-        }
-
-        static auto handleDataJson( AsyncWebServerRequest* request ) -> void
-        {
-            auto response{new AsyncJsonResponse{true, 4096}};
-            auto& responseJson{response->getRoot()};
-
-            {
-                auto filter = WebInterface::buildFilter( request );
-                while(true)
-                {
-                    const auto sensorData = filter.next();
-                    if(!sensorData.has_value()){
-                        break;
-                    }
-                    auto element = responseJson.add();
-                    sensorData->serialize( element );
-                }
-            }
 
             response->setLength();
             request->send( response );
@@ -130,49 +108,46 @@ namespace WebInterface
 
         static auto handleDataCsv( AsyncWebServerRequest* request ) -> void
         {
-            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request ) );
-
-            auto stream = std::make_shared<std::stringstream>();
-            stream->imbue(loc);
+            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request, 10000 ) );
 
             auto response = request->beginChunkedResponse( "text/csv", [=]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t 
             {
-                auto len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
-                if ( len == 0 )
+                auto len = 0u;
+                auto rowBuf = std::array<char, 100u>{};
+
+                if(index == 0 and len == 0)
                 {
-                    if( index == 0 )
-                    {
-                        ( *stream ) << "datahora" << ';'
-                                    << "temperatura" << ';'
-                                    << "umidade" << ';'
-                                    << "pressao" << ';'
-                                    << "velocidade_vento" << ';'
-                                    << "direcao_vento" << ';'
-                                    << "tempo" << "\r\n";
-                        len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
-                    }
-                    else
-                    {
-                        const auto sensorData = filter->next();
-                        if( sensorData.has_value() )
-                        {
-                            ( *stream ) << Utils::DateTime::toString( std::chrono::system_clock::from_time_t( sensorData->dateTime ) ) << ';'
-                                        << sensorData->temperature << ';'
-                                        << sensorData->humidity << ';'
-                                        << sensorData->pressure << ';'
-                                        << sensorData->windSpeed << ';'
-                                        << Utils::WindDirection::getName(sensorData->windDirection) << ';'
-                                        << Utils::RainIntensity::getName(sensorData->rainIntensity) << "\r\n";
-                            len = stream->readsome( reinterpret_cast<char*>( buffer ), maxLen );
-                        }
-                    }
+                    memcpy(buffer, "datahora;temp;umid;pressao;vento;direcao;chuva\r\n", 48);
+                    len += 48;
                 }
+
+                while(len + rowBuf.size() <= maxLen)
+                {
+                    const auto sensorData = filter->next();
+                    if(not sensorData.has_value()){
+                        break;
+                    }
+
+                    const auto written = snprintf(rowBuf.data(), rowBuf.size(),
+                        "%s;%.1f;%.1f;%.1f;%.1f;%s;%s\r\n",
+                        Utils::DateTime::toString(std::chrono::system_clock::from_time_t(sensorData->dateTime)).c_str(),
+                        sensorData->temperature,
+                        sensorData->humidity,
+                        sensorData->pressure,
+                        sensorData->windSpeed,
+                        Utils::WindDirection::getName(sensorData->windDirection).c_str(),
+                        Utils::RainIntensity::getName(sensorData->rainIntensity).c_str()
+                    );
+
+                    memcpy(buffer + len, rowBuf.data(), written);
+                    len += written;
+                }
+                
                 return len;
             });
 
             response->addHeader( "Content-Disposition", "attachment;filename=data.csv" );
             request->send( response );
-
         }
 
         static auto handleJqueryMinJs( AsyncWebServerRequest* request ) -> void
@@ -414,7 +389,6 @@ namespace WebInterface
         {
             server->on( "/configuration.json", HTTP_GET, Get::handleConfigurationJson );
             server->on( "/datetime.json", HTTP_GET, Get::handleDateTimeJson );
-            server->on( "/data.json", HTTP_GET, Get::handleDataJson );
             server->on( "/configuration.html", HTTP_GET, Get::handleConfigurationHtml );
             server->on( "/configuration.js", HTTP_GET, Get::handleConfigurationJs );
             server->on( "/data.html", HTTP_GET, Get::handleDataHtml );

@@ -17,12 +17,12 @@ namespace Database
         private:
             sqlite3_stmt* res;
         public:
-            Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end);
+            Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, uint32_t limit );
             Filter( Filter& ) = delete;
             Filter( Filter&& );
             ~Filter();
 
-            auto next() const -> std::optional<Infos::SensorData>;
+            auto next() -> std::optional<Infos::SensorData>;
     };
 
     auto init() -> void;

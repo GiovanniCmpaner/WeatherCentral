@@ -5,7 +5,7 @@ $(document).ready(() => {
 	createWindSpeedChart();
     handleFilter();
     getDateTime();
-    getData().then(() => clearMessage());
+    loadCSV().then(() => clearMessage());
 });
 
 let temperatureChart;
@@ -24,7 +24,7 @@ function handleFilter() {
         event.preventDefault();
         if ($("#filter")[0].checkValidity()) {
             if ($("#filter").prop("action").endsWith("filter")) {
-                getData().then(() => clearMessage());
+                loadCSV().then(() => clearMessage());
             }
             else if ($("#filter").prop("action").endsWith("download")) {
                 handleDownload();
@@ -34,8 +34,11 @@ function handleFilter() {
 }
 
 function handleDownload() {
-    var filter = buildfilter();
-    window.location = `/data.csv?${new URLSearchParams(filter).toString()}`;
+    const params = new URLSearchParams({
+        start: `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`,
+        end: `${$("#filter_end_date").val()} ${$("#filter_end_time").val()}`,
+    })
+    window.location = `/data.csv?${params}`;
 }
 
 function getDateTime() {
@@ -48,81 +51,101 @@ function getDateTime() {
     $("#filter_end_time").val("23:59:59");
 }
 
-function buildfilter() {
-    var filter = {};
-    if ($("#filter_start_date").val() && $("#filter_start_time").val()) {
-        filter.start = `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`;
-    }
-    else {
-        delete filter.start;
-    }
-    if ($("#filter_end_date").val() && $("#filter_end_time").val()) {
-        filter.end = `${$("#filter_end_date").val()} ${$("#filter_end_time").val()}`;
-    }
-    else {
-        delete filter.end;
-    }
-    if (Object.values(filter).length > 0) {
-        return filter;
-    }
-    else {
-        return null;
-    }
-}
+async function loadCSV() {
 
-function getData(filter) {
-    var deferred = new $.Deferred();
+    $("#filter :input").prop("disabled", true);
+    $("#result tbody tr").remove();
+    clearCharts();
 
-    $.ajax({
-        type: "GET",
-        url: `http://${window.location.host || "192.168.1.200"}/data.json`,
-        accepts: 'application/json',
-        timeout: 5000,
-        data: filter,
-        beforeSend: () => {
-            $("#filter :input").prop("disabled", true);
-            infoMessage("Loading");
-        }
-    })
-        .done((data) => {
-            $("#result tbody tr").remove();
+    infoMessage("Carregando dados");
 
-            let template = $($.parseHTML($("#data_template").html()));
-            for (const [i, d] of data.entries()) {
+    try {
+        const params = new URLSearchParams({
+            start: `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`,
+            end: `${$("#filter_end_date").val()} ${$("#filter_end_time").val()}`,
+        })
+        const response = await fetch(`http://${window.location.host || "192.168.1.200"}/data.csv?${params}`);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let { value, done } = await reader.read();
+
+        let template = $($.parseHTML($("#data_template").html()));
+        let buffer = "";
+
+        while (!done) {
+            buffer += decoder.decode(value, { stream: true });
+            let lines = buffer.split("\n");
+            buffer = lines.pop(); // mantém o pedaço incompleto
+
+            let newRows = [];
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                const cells = line.split(";"); // seu CSV usa ';'
+
+                // pula cabeçalho se for a primeira linha
+                if (cells[0].toLowerCase() === "datahora") continue;
+
                 let row = template.clone();
-                let [date, time] = d.datetime.split(" ");
-                row.find("#data_date").text(date);
-                row.find("#data_time").text(time);
-                row.find("#data_temperature").text(d.temperature.toFixed(2));
-                row.find("#data_humidity").text(d.humidity.toFixed(2));
-                row.find("#data_pressure").text(d.pressure.toFixed(2));
-                row.find("#data_wind_speed").text(d.wind_speed.toFixed(2));
-                row.find("#data_wind_direction").text(d.wind_direction);
-                row.find("#data_rain_intensity").text(d.rain_intensity);
-                for (let c of row.find("*")) {
-                    if (c.id) {
-                        c.id += `_${i}`;
-                    }
-                    if (c.htmlFor) {
-                        c.htmlFor += `_${i}`;
-                    }
+
+                const data = {
+                    datetime: new Date(cells[0]),
+                    temperature: parseFloat(cells[1].replace(',', '.')),
+                    humidity: parseFloat(cells[2].replace(',', '.')),
+                    pressure: parseFloat(cells[3].replace(',', '.')),
+                    wind_speed: parseFloat(cells[4].replace(',', '.')),
+                    wind_direction: cells[5],
+                    rain_intensity: cells[6],
                 }
-                row.appendTo($("#result tbody"));
+
+                row.find("#data_date").text(data.datetime.toLocaleDateString());
+                row.find("#data_time").text(data.datetime.toLocaleTimeString());
+                row.find("#data_temperature").text(data.temperature.toFixed(2));
+                row.find("#data_humidity").text(data.humidity.toFixed(2));
+                row.find("#data_pressure").text(data.pressure.toFixed(2));
+                row.find("#data_wind_speed").text(data.wind_speed.toFixed(2));
+                row.find("#data_wind_direction").text(data.wind_direction);
+                row.find("#data_rain_intensity").text(data.rain_intensity);
+                
+                newRows.push(row);
+
+                updateCharts(data);
             }
 
-            updateCharts(data);
+            $("#result tbody").append(newRows);
 
-            successMessage("Dados carregados");
-            deferred.resolve();
-        })
-        .fail((xhr, status, error) => {
-            errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
-            deferred.reject();
-        })
-        .always(() => {
-            $("#filter :input").prop("disabled", false);
-        });
-    return deferred.promise();
+            ({ value, done } = await reader.read());
+        }
+
+        //// último pedaço
+        //if (buffer.trim()) {
+        //    const cells = buffer.split(";");
+        //    if (cells[0].toLowerCase() !== "datahora") {
+        //        const [date, time] = cells[0].split(" ");
+        //        const row = $("<tr>");
+        //        row.append($("<td>").text(date || ""));
+        //        row.append($("<td>").text(time || ""));
+        //        row.append($("<td>").text(parseFloat(cells[1]).toFixed(2)));
+        //        row.append($("<td>").text(parseFloat(cells[2]).toFixed(2)));
+        //        row.append($("<td>").text(parseFloat(cells[3]).toFixed(2)));
+        //        row.append($("<td>").text(parseFloat(cells[4]).toFixed(2)));
+        //        row.append($("<td>").text(cells[5] || ""));
+        //        row.append($("<td>").text(cells[6] || ""));
+        //        row.append("</tr>");
+        //        row.appendTo($("#result tbody"));
+        //    }
+        //}
+
+        successMessage("Dados carregados");
+
+    } catch (err) {
+        errorMessage(`Erro: ${err}`);
+    }
+    finally {
+        $("#filter :input").prop("disabled", false);
+    }
 }
 
 function createTemperatureChart() {
@@ -135,7 +158,8 @@ function createTemperatureChart() {
 				datasets: [
 					{
 						pointBackgroundColor: 'red',
-						borderColor: 'red'
+						borderColor: 'red',
+                        tension: 0.4,
 					}]
 			},
 			options:
@@ -200,7 +224,8 @@ function createHumidityChart() {
 				datasets: [
 					{
 						pointBackgroundColor: 'green',
-						borderColor: 'green'
+						borderColor: 'green',
+                        tension: 0.4,
 					}]
 			},
 			options:
@@ -265,7 +290,8 @@ function createPressureChart() {
 				datasets: [
 					{
 						pointBackgroundColor: 'blue',
-						borderColor: 'blue'
+						borderColor: 'blue',
+                        tension: 0.4,
 					}]
 			},
 			options:
@@ -330,7 +356,8 @@ function createWindSpeedChart() {
 				datasets: [
 					{
 						pointBackgroundColor: 'purple',
-						borderColor: 'purple'
+						borderColor: 'purple',
+                        tension: 0.4,
 					}]
 			},
 			options:
@@ -387,23 +414,41 @@ function createWindSpeedChart() {
 
 function updateCharts(data) {
 
-    temperatureChart.data.labels = data.map(d => d.datetime);
-    temperatureChart.data.datasets[0].data = data.map(d => d.temperature);
+    temperatureChart.data.labels.push(data.datetime);
+    temperatureChart.data.datasets[0].data.push(data.temperature);
     temperatureChart.update();
 
-    humidityChart.data.labels = data.map(d => d.datetime);
-    humidityChart.data.datasets[0].data = data.map(d => d.humidity);
+    humidityChart.data.labels.push(data.datetime);
+    humidityChart.data.datasets[0].data.push(data.humidity);
     humidityChart.update();
 
-    pressureChart.data.labels = data.map(d => d.datetime);
-    pressureChart.data.datasets[0].data = data.map(d => d.pressure);
+    pressureChart.data.labels.push(data.datetime);
+    pressureChart.data.datasets[0].data.push(data.pressure);
     pressureChart.update();
 
-    windSpeedChart.data.labels = data.map(d => d.datetime);
-    windSpeedChart.data.datasets[0].data = data.map(d => d.wind_speed);
+    windSpeedChart.data.labels.push(data.datetime);
+    windSpeedChart.data.datasets[0].data.push(data.wind_speed);
     windSpeedChart.update();
 
 	//updateWindDirectionChart(sensors.wind_direction);
+}
+
+function clearCharts(){
+    temperatureChart.data.labels = [];
+    temperatureChart.data.datasets[0].data = [];
+    temperatureChart.update();
+
+    humidityChart.data.labels = [];
+    humidityChart.data.datasets[0].data = [];
+    humidityChart.update();
+
+    pressureChart.data.labels = [];
+    pressureChart.data.datasets[0].data = [];
+    pressureChart.update();
+
+    windSpeedChart.data.labels = [];
+    windSpeedChart.data.datasets[0].data = [];
+    windSpeedChart.update();
 }
 
 function clearMessage() {
