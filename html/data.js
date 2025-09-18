@@ -126,7 +126,7 @@ async function loadCSV() {
 			updateCharts(data);
 		}
 		
-		$("#result tbody").empty().append(newRows);
+		$("#result tbody").append(newRows);
 
         //// último pedaço
         //if (buffer.trim()) {
