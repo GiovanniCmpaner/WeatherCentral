@@ -4,8 +4,7 @@ $(document).ready(() => {
 	createPressureChart();
 	createWindSpeedChart();
     handleFilter();
-    getDateTime();
-    loadCSV().then(() => clearMessage());
+    getDateTime().then(() => loadCSV()).then(() => clearMessage());
 });
 
 let temperatureChart;
@@ -42,13 +41,35 @@ function handleDownload() {
 }
 
 function getDateTime() {
+    var deferred = new $.Deferred();
+    $.ajax({
+        type: "GET",
+        url: `http://${window.location.host || "192.168.1.200"}/datetime.json`,
+        accepts: 'application/json',
+        timeout: 5000,
+        beforeSend: () => {
+            $("#filter :input").prop("disabled", true);
+            infoMessage("Loading");
+        }
+    })
+	.done((dateTime) => {
+		var [date, time] = dateTime.split(" ");
+		$("#filter_start_date").val(date);
+		$("#filter_start_time").val("00:00:00");
+		$("#filter_end_date").val(date);
+		$("#filter_end_time").val("23:59:59");
 
-    var now = new Date().toISOString();
-    var [date, time] = now.split("T");
-    $("#filter_start_date").val(date);
-    $("#filter_start_time").val("00:00:00");
-    $("#filter_end_date").val(date);
-    $("#filter_end_time").val("23:59:59");
+		successMessage("Data hora carregada");
+		deferred.resolve();
+	})
+	.fail((xhr, status, error) => {
+		errorMessage(status == "timeout" ? "Fail: Timeout" : `Fail: ${xhr.status} ${xhr.statusText}`);
+		deferred.reject();
+	})
+	.always(() => {
+		$("#filter :input").prop("disabled", false);
+	});
+    return deferred.promise();
 }
 
 async function loadCSV() {
@@ -61,63 +82,51 @@ async function loadCSV() {
 
     try {
         const params = new URLSearchParams({
-            start: `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`,
-            end: `${$("#filter_end_date").val()} ${$("#filter_end_time").val()}`,
-        })
-        const response = await fetch(`http://${window.location.host || "192.168.1.200"}/data.csv?${params}`);
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-
-        let { value, done } = await reader.read();
-
-        let template = $($.parseHTML($("#data_template").html()));
-        let buffer = "";
-
-        while (!done) {
-            buffer += decoder.decode(value, { stream: true });
-            let lines = buffer.split("\n");
-            buffer = lines.pop(); // mantém o pedaço incompleto
-
-            let newRows = [];
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                const cells = line.split(";"); // seu CSV usa ';'
-
-                // pula cabeçalho se for a primeira linha
-                if (cells[0].toLowerCase() === "datahora") continue;
-
-                let row = template.clone();
-
-                const data = {
-                    datetime: new Date(cells[0]),
-                    temperature: parseFloat(cells[1].replace(',', '.')),
-                    humidity: parseFloat(cells[2].replace(',', '.')),
-                    pressure: parseFloat(cells[3].replace(',', '.')),
-                    wind_speed: parseFloat(cells[4].replace(',', '.')),
-                    wind_direction: cells[5],
-                    rain_intensity: cells[6],
-                }
-
-                row.find("#data_date").text(data.datetime.toLocaleDateString());
-                row.find("#data_time").text(data.datetime.toLocaleTimeString());
-                row.find("#data_temperature").text(data.temperature.toFixed(2));
-                row.find("#data_humidity").text(data.humidity.toFixed(2));
-                row.find("#data_pressure").text(data.pressure.toFixed(2));
-                row.find("#data_wind_speed").text(data.wind_speed.toFixed(2));
-                row.find("#data_wind_direction").text(data.wind_direction);
-                row.find("#data_rain_intensity").text(data.rain_intensity);
-                
-                newRows.push(row);
-
-                updateCharts(data);
-            }
-
-            $("#result tbody").append(newRows);
-
-            ({ value, done } = await reader.read());
-        }
+			start: `${$("#filter_start_date").val()} ${$("#filter_start_time").val()}`,
+			end: `${$("#filter_end_date").val()} ${$("#filter_end_time").val()}`,
+		});
+		
+		const response = await fetch(`http://${window.location.host || "192.168.1.200"}/data.csv?${params}`);
+		const text = await response.text();
+		
+		let template = $($.parseHTML($("#data_template").html()));
+		let newRows = [];
+		
+		for (const line of text.split("\n")) {
+			if (!line.trim()) continue;
+		
+			const cells = line.split(";");
+		
+			// skip header
+			if (cells[0].toLowerCase() === "datahora") continue;
+		
+			let row = template.clone();
+		
+			const data = {
+				datetime: new Date(cells[0]),
+				temperature: parseFloat(cells[1].replace(',', '.')),
+				humidity: parseFloat(cells[2].replace(',', '.')),
+				pressure: parseFloat(cells[3].replace(',', '.')),
+				wind_speed: parseFloat(cells[4].replace(',', '.')),
+				wind_direction: cells[5],
+				rain_intensity: cells[6],
+			};
+		
+			row.find("#data_date").text(data.datetime.toLocaleDateString());
+			row.find("#data_time").text(data.datetime.toLocaleTimeString());
+			row.find("#data_temperature").text(data.temperature.toFixed(2));
+			row.find("#data_humidity").text(data.humidity.toFixed(2));
+			row.find("#data_pressure").text(data.pressure.toFixed(2));
+			row.find("#data_wind_speed").text(data.wind_speed.toFixed(2));
+			row.find("#data_wind_direction").text(data.wind_direction);
+			row.find("#data_rain_intensity").text(data.rain_intensity);
+		
+			newRows.push(row);
+		
+			updateCharts(data);
+		}
+		
+		$("#result tbody").empty().append(newRows);
 
         //// último pedaço
         //if (buffer.trim()) {
