@@ -131,12 +131,12 @@ namespace Database
 
     static auto sample() -> void
     {
-        if(rolling.size() < 100){
+        if(rolling.size() < 90){
             rolling.emplace_back(Infos::SensorData::get());
         }
         else {
             rolling[index] = Infos::SensorData::get();
-            index = (index + 1) % 100;
+            index = (index + 1) % 90;
         }
     }
 
@@ -145,7 +145,7 @@ namespace Database
     {
         log_d( "begin" );
 
-        rolling.reserve(100);
+        rolling.reserve(90);
         index = 0;
 
         initializeDatabase();
