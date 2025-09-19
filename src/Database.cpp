@@ -6,6 +6,8 @@
 #include <sqlite3.h>
 #include <future>
 #include <thread>
+#include <array>
+#include <numeric>
 
 #include "Configuration.hpp"
 #include "Database.hpp"
@@ -17,6 +19,8 @@
 namespace Database
 {
     static sqlite3* db = nullptr;
+    static std::vector<Infos::SensorData> rolling = {};
+    static std::size_t index = 0u;
 
     static auto initializeDatabase() -> void
     {
@@ -110,13 +114,39 @@ namespace Database
 
     static auto generate() -> void
     {
-        insert( Infos::SensorData::get() );
+        const auto current = Infos::SensorData::get();
+        const auto average = Infos::SensorData{
+            .dateTime = current.dateTime,
+            .temperature = std::accumulate(rolling.begin(), rolling.end(), 0.0f, [](auto v, const auto& s){ return v + s.temperature; }) / rolling.size(),
+            .humidity = std::accumulate(rolling.begin(), rolling.end(), 0.0f, [](auto v, const auto& s){ return v + s.humidity; }) / rolling.size(),
+            .pressure = std::accumulate(rolling.begin(), rolling.end(), 0.0f, [](auto v, const auto& s){ return v + s.pressure; }) / rolling.size(),
+            .windSpeed = std::accumulate(rolling.begin(), rolling.end(), 0.0f, [](auto v, const auto& s){ return v + s.windSpeed; }) / rolling.size(),
+            .windDirection = current.windDirection,
+            .rainIntensity = current.rainIntensity,
+        };
+
+        insert( average );
         cleanup();
     }
+
+    static auto sample() -> void
+    {
+        if(rolling.size() < 100){
+            rolling.emplace_back(Infos::SensorData::get());
+        }
+        else {
+            rolling[index] = Infos::SensorData::get();
+            index = (index + 1) % 100;
+        }
+    }
+
 
     auto init() -> void
     {
         log_d( "begin" );
+
+        rolling.reserve(100);
+        index = 0;
 
         initializeDatabase();
         createTable();
@@ -126,6 +156,7 @@ namespace Database
 
     auto process() -> void
     {
+        Utils::bound( std::chrono::seconds( 10 ), Database::sample );
         Utils::bound( std::chrono::minutes( 15 ), Database::generate );
     }
 
