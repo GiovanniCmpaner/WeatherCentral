@@ -2,9 +2,11 @@ $(document).ready(() => {
 	createWindSpeedChart();
 	createWindDirectionChart();
 	connectWsSensors();
+	connectWsLogs();
 });
 
 let wsSensors;
+let wsLogs;
 let temperatureChart;
 let humidityChart;
 let pressureChart;
@@ -40,6 +42,38 @@ function connectWsSensors() {
 		let sensors = JSON.parse(evt.data);
 		updateValues(sensors);
 		updateCharts(sensors);
+	};
+
+	return deferred.promise();
+}
+
+function connectWsLogs() {
+	let deferred = new $.Deferred();
+
+	infoMessage("Socket connecting");
+
+	wsLogs = new WebSocket(`ws://${window.location.host || "192.168.1.200"}/log.ws`);
+	wsLogs.onopen = (evt) => {
+		deferred.resolve(wsLogs);
+		successMessage("Socket opened").then(() => clearMessage());
+	};
+
+	wsLogs.onclose = (evt) => {
+		if (evt.wasClean) {
+			warningMessage("Socket closed");
+		}
+		else {
+			errorMessage("Socket error");
+		}
+		setTimeout(() => connectWsSensors(), 10000);
+	};
+
+	wsLogs.onerror = (evt) => {
+		// NOTHING
+	};
+
+	wsLogs.onmessage = (evt) => {
+		console.log(`-- log = ${evt.data}`);
 	};
 
 	return deferred.promise();

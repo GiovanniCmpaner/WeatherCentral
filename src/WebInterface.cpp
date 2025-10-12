@@ -34,6 +34,7 @@ namespace WebInterface
     static std::chrono::system_clock::time_point wsCleanupTimer = {};
 
     static AsyncWebSocket sensorsWs = {"/sensors.ws"};
+    static AsyncWebSocket logWs = {"/log.ws"};
 
     static auto buildFilter( AsyncWebServerRequest* request, uint32_t limit ) -> Database::Filter
     {
@@ -346,7 +347,7 @@ namespace WebInterface
 
     namespace WebSocket 
     {
-        auto handleSensorsWs(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) -> void
+        auto handleDefaultWs(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) -> void
         {
             if (type == WS_EVT_CONNECT)
             {
@@ -404,8 +405,11 @@ namespace WebInterface
             server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
             server->onFileUpload( Post::handleFile );
 
-            sensorsWs.onEvent(WebSocket::handleSensorsWs);
+            sensorsWs.onEvent(WebSocket::handleDefaultWs);
             server->addHandler(&sensorsWs);
+
+            logWs.onEvent(WebSocket::handleDefaultWs);
+            server->addHandler(&logWs);
 
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Origin", "*" );
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Methods", "POST, GET, OPTIONS" );
@@ -528,6 +532,7 @@ namespace WebInterface
             wsCleanupTimer = now;
 
             WebInterface::sensorsWs.cleanupClients(1);
+            WebInterface::logWs.cleanupClients(1);
         }
     }
 
@@ -573,9 +578,24 @@ namespace WebInterface
         }
     }
 
+    auto sendLogs(const char *format, va_list args) -> int {
+        char buffer[256];
+        int ret = vsnprintf(buffer, sizeof(buffer), format, args);
+
+        if (WebInterface::logWs.count() > 0)
+        {
+            WebInterface::logWs.textAll(buffer);
+        }
+
+        return ret;
+    }
+
     auto init() -> void
     {
         log_d( "begin" );
+
+        esp_log_set_vprintf(WebInterface::sendLogs);
+        esp_log_level_set("*", ESP_LOG_VERBOSE);
 
         if( not configureAccessPoint() )
         {

@@ -8,6 +8,7 @@
 #include <thread>
 #include <array>
 #include <numeric>
+#include <LittleFS.h>
 
 #include "Configuration.hpp"
 #include "Database.hpp"
@@ -65,19 +66,32 @@ namespace Database
 
     static auto cleanup() -> void 
     {
-        const auto query = "DELETE FROM SENSORS_DATA "
-                           "WHERE DATE_TIME < strftime('%s','now','-2 months')";
+        log_d("cleanup");
 
-        char* errMsg = nullptr;
-        const auto rc = sqlite3_exec(db, query, nullptr, nullptr, nullptr);
-        if (rc != SQLITE_OK)
+        const auto query = "DELETE FROM SENSORS_DATA "
+                           "WHERE DATE_TIME <= ?";
+
+        sqlite3_stmt* res;
+        const auto rc = sqlite3_prepare_v2( db, query, strlen( query ), &res, nullptr );
+        if ( rc != SQLITE_OK )
         {
-            log_d("delete error: %s", sqlite3_errmsg( db ));
+            log_e( "cleanup prepare error: %s", sqlite3_errmsg( db ) );
+            return;
         }
+
+        sqlite3_bind_int64( res, 1, std::time(nullptr) - (45 * 24 * 60 * 60) );
+
+        if ( sqlite3_step( res ) != SQLITE_DONE )
+        {
+            log_e( "cleanup error: %s", sqlite3_errmsg( db ) );
+        }
+        sqlite3_finalize( res );
     }
 
     static auto insert( const Infos::SensorData& sensorData ) -> void
     {
+        log_d("insert");
+
         const auto query = " INSERT INTO SENSORS_DATA ( "
                            "     DATE_TIME,             "
                            "     TEMPERATURE,           "
@@ -94,7 +108,7 @@ namespace Database
         const auto rc = sqlite3_prepare_v2( db, query, strlen( query ), &res, nullptr );
         if ( rc != SQLITE_OK )
         {
-            log_d( "insert prepare error: %s", sqlite3_errmsg( db ) );
+            log_e( "insert prepare error: %s", sqlite3_errmsg( db ) );
             return;
         }
 
@@ -107,7 +121,7 @@ namespace Database
         sqlite3_bind_int( res, 7, static_cast<int>(sensorData.rainIntensity));
         if ( sqlite3_step( res ) != SQLITE_DONE )
         {
-            log_d( "insert error: %s", sqlite3_errmsg( db ) );
+            log_e( "insert error: %s", sqlite3_errmsg( db ) );
         }
         sqlite3_finalize( res );
     }
@@ -125,8 +139,8 @@ namespace Database
             .rainIntensity = current.rainIntensity,
         };
 
-        insert( average );
         cleanup();
+        insert( average );
     }
 
     static auto sample() -> void
