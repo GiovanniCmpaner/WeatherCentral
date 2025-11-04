@@ -35,7 +35,7 @@ namespace Infos
 
     static IRAM_ATTR auto windSpeedCalculate() -> void 
     {
-        Infos::windSpeed = Infos::windSpeedCounter.exchange(0) * (2.0 * M_PI * cfg.windSpeed.radius) * 3.6 / 3;
+        Infos::windSpeed = Infos::windSpeedCounter.exchange(0) * (2.0 * M_PI * cfg.windSpeed.radius) * 3.6 / 3; // 3 segundos
     }
 
     static IRAM_ATTR auto windSpeedCount() -> void 
@@ -50,12 +50,10 @@ namespace Infos
             log_d( "bme error" );
         }
 
-        windSpeedTimer = timerBegin(0, 80, true);
-        timerAttachInterrupt(windSpeedTimer, Infos::windSpeedCalculate, false);
-        timerAlarmWrite(windSpeedTimer, 3000000, true);
-        timerAlarmEnable(windSpeedTimer);
-
-        attachInterrupt(Peripherals::WIND_SPEED, Infos::windSpeedCount, FALLING);
+        windSpeedTimer = timerBegin(1000000);
+        timerAttachInterrupt(windSpeedTimer, Infos::windSpeedCalculate);
+        timerAlarm(windSpeedTimer, 3000000, true, 0); // A cada 3 segundos
+        timerStart(windSpeedTimer);
 
         windDirection.second.begin(Peripherals::WIND_DIRECTION, false);
         windDirection.second.setAnalogResolution(4096);

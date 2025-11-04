@@ -14,7 +14,6 @@
 #include <memory>
 #include <Update.h>
 #include <esp_task_wdt.h>
-#include <soc/rtc_wdt.h>
 #include <rom/rtc.h>
 
 #include "Configuration.hpp"
@@ -456,7 +455,6 @@ namespace WebInterface
         }
 
         WiFi.persistent( false );
-        WiFi.setAutoConnect( false );
         WiFi.setAutoReconnect( true );
 
         if ( not WiFi.config( cfg.station.ip.data(), cfg.station.gateway.data(), cfg.station.netmask.data() ) )
