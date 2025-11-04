@@ -455,6 +455,7 @@ namespace WebInterface
         }
 
         WiFi.persistent( false );
+        WiFi.setAutoConnect( false );
         WiFi.setAutoReconnect( true );
 
         if ( not WiFi.config( cfg.station.ip.data(), cfg.station.gateway.data(), cfg.station.netmask.data() ) )
