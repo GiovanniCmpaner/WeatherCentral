@@ -29,7 +29,7 @@ namespace Database
 
         sqlite3_initialize();
 
-        const auto rc = sqlite3_open( "/littlefs/sensors_data.db", &db );
+        const auto rc = sqlite3_open( "/sd/sensors_data.db", &db );
         if ( rc != SQLITE_OK )
         {
             log_e( "database open error: %s\n", sqlite3_errmsg( db ) );

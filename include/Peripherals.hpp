@@ -14,7 +14,7 @@ namespace Peripherals
             SCL = 22
         };
         static constexpr uint8_t I2C_ADDRESS = 0x76;
-    }; // namespace BME280
+    };
 
     namespace DS3231
     {
@@ -24,7 +24,19 @@ namespace Peripherals
             SDA = 21
         };
         static constexpr uint8_t I2C_ADDRESS = 0x68;
-    }; // namespace DS3231
+    };
+
+     namespace SD_CARD
+    {
+        enum Pins
+        {
+            SS = 5,
+            MOSI = 23,
+            MISO = 19,
+            SCK = 18
+        };
+        static SPIClass SPI = {VSPI};
+    };
 
     enum Pins
     {
