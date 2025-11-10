@@ -56,8 +56,8 @@ static const Configuration defaultCfg
     .rainIntensity = {
         .threshoulds = {
             {RainIntensity::DRY,   {   0, 1000}},
-            {RainIntensity::HUMID, {1001, 3000}},
-            {RainIntensity::RAINY, {3001, 4095}},
+            {RainIntensity::HUMID, {1001, 2000}},
+            {RainIntensity::RAINY, {2001, 4095}},
         }
     }
 };

@@ -50,6 +50,13 @@ function handleConfiguration() {
         }
     });
 
+    $("#rain_intensity").submit((event) => {
+        event.preventDefault();
+        if ($("#rain_intensity")[0].checkValidity()) {
+            setRainIntensity().then(() => clearMessage());
+        }
+    });
+
     $("#access_point").submit((event) => {
         event.preventDefault();
         if ($("#access_point")[0].checkValidity()) {
