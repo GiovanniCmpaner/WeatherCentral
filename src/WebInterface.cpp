@@ -129,7 +129,7 @@ namespace WebInterface
                     len += written;
                 }
 
-                return (len == 0 ? RESPONSE_TRY_AGAIN : 0);
+                return (len == 0 ? RESPONSE_TRY_AGAIN : len);
             });
 
             response->addHeader( "Content-Disposition", "attachment;filename=data.csv" );
@@ -514,7 +514,6 @@ namespace WebInterface
             _wsCleanupTimer = now;
 
             _sensorsWs.cleanupClients(1);
-            _logWs.cleanupClients(1);
         }
     }
 
