@@ -27,30 +27,13 @@
 
 namespace WebInterface
 {
-    static std::unique_ptr<AsyncWebServer> server = {};
-    static std::chrono::system_clock::time_point modeTimer = {};
-    static std::chrono::system_clock::time_point sensorsSendTimer = {};
-    static std::chrono::system_clock::time_point wsCleanupTimer = {};
+    static std::unique_ptr<AsyncWebServer> _server = {};
+    static std::chrono::system_clock::time_point _modeTimer = {};
+    static std::chrono::system_clock::time_point _reconnectTimer = {};
+    static std::chrono::system_clock::time_point _sensorsSendTimer = {};
+    static std::chrono::system_clock::time_point _wsCleanupTimer = {};
 
-    static AsyncWebSocket sensorsWs = {"/sensors.ws"};
-    static AsyncWebSocket logWs = {"/log.ws"};
-
-    static auto buildFilter( AsyncWebServerRequest* request, uint32_t limit ) -> Database::Filter
-    {
-        auto start = std::chrono::system_clock::time_point::min();
-        auto end = std::chrono::system_clock::time_point::max();
-
-        if ( request->hasParam( "start" ) )
-        {
-            start = Utils::DateTime::fromString( request->getParam( "start" )->value().c_str() );
-        }
-        if ( request->hasParam( "end" ) )
-        {
-            end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
-        }
-
-        return Database::Filter{start, end, limit};
-    }
+    static AsyncWebSocket _sensorsWs = {"/sensors.ws"};
 
     namespace Get
     {
@@ -108,7 +91,10 @@ namespace WebInterface
 
         static auto handleDataCsv( AsyncWebServerRequest* request ) -> void
         {
-            auto filter = std::make_shared<Database::Filter>( WebInterface::buildFilter( request, 10000 ) );
+            const auto start = Utils::DateTime::fromString( request->getParam( "start" )->value().c_str() );
+            const auto end = Utils::DateTime::fromString( request->getParam( "end" )->value().c_str() );
+
+            auto filter = std::make_shared<Database::Filter>(start, end, 10000);
 
             auto response = request->beginChunkedResponse( "text/csv", [=]( uint8_t* buffer, size_t maxLen, size_t index ) -> size_t 
             {
@@ -125,7 +111,7 @@ namespace WebInterface
                 {
                     const auto sensorData = filter->next();
                     if(not sensorData.has_value()){
-                        break;
+                        return len;
                     }
 
                     const auto written = snprintf(rowBuf.data(), rowBuf.size(),
@@ -142,8 +128,8 @@ namespace WebInterface
                     memcpy(buffer + len, rowBuf.data(), written);
                     len += written;
                 }
-                
-                return len;
+
+                return (len == 0 ? RESPONSE_TRY_AGAIN : 0);
             });
 
             response->addHeader( "Content-Disposition", "attachment;filename=data.csv" );
@@ -374,47 +360,44 @@ namespace WebInterface
 
     static auto configureServer() -> void
     {
-        server.release();
+        _server.release();
 
         if ( WiFi.getMode() == WIFI_MODE_STA )
         {
-            server.reset( new AsyncWebServer{cfg.station.port} );
+            _server.reset( new AsyncWebServer{cfg.station.port} );
         }
         else if ( WiFi.getMode() == WIFI_MODE_AP )
         {
-            server.reset( new AsyncWebServer{cfg.accessPoint.port} );
+            _server.reset( new AsyncWebServer{cfg.accessPoint.port} );
         }
 
-        if ( server )
+        if ( _server )
         {
-            server->on( "/configuration.json", HTTP_GET, Get::handleConfigurationJson );
-            server->on( "/datetime.json", HTTP_GET, Get::handleDateTimeJson );
-            server->on( "/configuration.html", HTTP_GET, Get::handleConfigurationHtml );
-            server->on( "/configuration.js", HTTP_GET, Get::handleConfigurationJs );
-            server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
-            server->on( "/data.js", HTTP_GET, Get::handleDataJs );
-            server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
-            server->on("/jquery.min.js", HTTP_GET, Get::handleJqueryMinJs);
-            server->on("/chart.min.js", HTTP_GET, Get::handleChartMinJs);
-            server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
-            server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
-            server->on( "/style.css", HTTP_GET, Get::handleStyleCss );
+            _server->on( "/configuration.json", HTTP_GET, Get::handleConfigurationJson );
+            _server->on( "/datetime.json", HTTP_GET, Get::handleDateTimeJson );
+            _server->on( "/configuration.html", HTTP_GET, Get::handleConfigurationHtml );
+            _server->on( "/configuration.js", HTTP_GET, Get::handleConfigurationJs );
+            _server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
+            _server->on( "/data.js", HTTP_GET, Get::handleDataJs );
+            _server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
+            _server->on("/jquery.min.js", HTTP_GET, Get::handleJqueryMinJs);
+            _server->on("/chart.min.js", HTTP_GET, Get::handleChartMinJs);
+            _server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
+            _server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
+            _server->on( "/style.css", HTTP_GET, Get::handleStyleCss );
 
-            server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
-            server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
-            server->onFileUpload( Post::handleFile );
+            _server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
+            _server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
+            _server->onFileUpload( Post::handleFile );
 
-            sensorsWs.onEvent(WebSocket::handleDefaultWs);
-            server->addHandler(&sensorsWs);
-
-            logWs.onEvent(WebSocket::handleDefaultWs);
-            server->addHandler(&logWs);
+            _sensorsWs.onEvent(WebSocket::handleDefaultWs);
+            _server->addHandler(&_sensorsWs);
 
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Origin", "*" );
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Methods", "POST, GET, OPTIONS" );
             DefaultHeaders::Instance().addHeader( "Access-Control-Allow-Headers", "Content-Type" );
             DefaultHeaders::Instance().addHeader( "Access-Control-Max-Age", "86400" );
-            server->onNotFound( []( AsyncWebServerRequest * request )
+            _server->onNotFound( []( AsyncWebServerRequest * request )
             {
                 if ( request->method() == HTTP_OPTIONS )
                 {
@@ -425,7 +408,7 @@ namespace WebInterface
                     request->send( 404 );
                 }
             } );
-            server->begin();
+            _server->begin();
         }
     }
 
@@ -456,7 +439,7 @@ namespace WebInterface
 
         WiFi.persistent( false );
         WiFi.setAutoConnect( false );
-        WiFi.setAutoReconnect( true );
+        WiFi.setAutoReconnect( false );
 
         if ( not WiFi.config( cfg.station.ip.data(), cfg.station.gateway.data(), cfg.station.netmask.data() ) )
         {
@@ -526,12 +509,12 @@ namespace WebInterface
     {
         const auto now = std::chrono::system_clock::now();
 
-        if (now - wsCleanupTimer >= std::chrono::milliseconds{1000})
+        if (now - _wsCleanupTimer >= std::chrono::milliseconds{1000})
         {
-            wsCleanupTimer = now;
+            _wsCleanupTimer = now;
 
-            WebInterface::sensorsWs.cleanupClients(1);
-            WebInterface::logWs.cleanupClients(1);
+            _sensorsWs.cleanupClients(1);
+            _logWs.cleanupClients(1);
         }
     }
 
@@ -539,11 +522,11 @@ namespace WebInterface
     {
         const auto now = std::chrono::system_clock::now();
 
-        if (now - sensorsSendTimer >= std::chrono::milliseconds{1000})
+        if (now - _sensorsSendTimer >= std::chrono::milliseconds{1000})
         {
-            sensorsSendTimer = now;
+            _sensorsSendTimer = now;
 
-            if (sensorsWs.count() > 0)
+            if (_sensorsWs.count() > 0)
             {
                 auto doc{ArduinoJson::DynamicJsonDocument{1024}};
                 auto json{doc.as<ArduinoJson::JsonVariant>()};
@@ -553,55 +536,58 @@ namespace WebInterface
 
                 auto str = String{};
                 ArduinoJson::serializeJson(doc, str);
-                WebInterface::sensorsWs.textAll(str);
+                _sensorsWs.textAll(str);
             }
         }
     }
 
     static auto checkModeChange() -> void 
     {
-        if( cfg.accessPoint.enabled and WiFi.getMode() == WIFI_MODE_AP )
+        if(not cfg.accessPoint.enabled or WiFi.getMode() != WIFI_MODE_AP)
         {
-            const auto now = std::chrono::system_clock::now();
-            if( WiFi.softAPgetStationNum() > 0 )
-            {
-                modeTimer = now;
-            }
-            else
-            {
-                if( now - modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
-                {
-                    configureStation();
-                }
-            }
+            return;
+        }
+
+        const auto now = std::chrono::system_clock::now();
+        if( WiFi.softAPgetStationNum() > 0 )
+        {
+            _modeTimer = now;
+        }
+        else if( now - _modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
+        {
+            configureStation();
         }
     }
 
-    auto sendLogs(const char *format, va_list args) -> int {
-        char buffer[256];
-        int ret = vsnprintf(buffer, sizeof(buffer), format, args);
-
-        if (WebInterface::logWs.count() > 0)
+    static auto checkReconnect() -> void 
+    {
+        if(WiFi.getMode() != WIFI_MODE_STA)
         {
-            WebInterface::logWs.textAll(buffer);
+            return;
         }
 
-        return ret;
+        const auto now = std::chrono::system_clock::now();
+        if( now - _reconnectTimer > std::chrono::seconds{30} )
+        {
+            _reconnectTimer = now;
+
+            if(not WiFi.isConnected())
+            {
+                WiFi.begin();
+            }
+        }
     }
 
     auto init() -> void
     {
         log_d( "begin" );
 
-        esp_log_set_vprintf(WebInterface::sendLogs);
-        esp_log_level_set("*", ESP_LOG_VERBOSE);
-
         if( not configureAccessPoint() )
         {
             configureStation();
         }
 
-        modeTimer = std::chrono::system_clock::now();
+        _modeTimer = std::chrono::system_clock::now();
 
         log_d( "end" );
     }
@@ -609,6 +595,7 @@ namespace WebInterface
     auto process() -> void
     {
         WebInterface::checkModeChange();
+        WebInterface::checkReconnect();
         WebInterface::cleanupWebSockets();
         WebInterface::sendSensors();
     }

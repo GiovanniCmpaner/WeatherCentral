@@ -43,22 +43,30 @@ namespace Database
     {
         log_d( "begin" );
         {
-            const auto query = " CREATE TABLE IF NOT EXISTS                    "
-                               "     SENSORS_DATA (                            "
-                               "         DATE_TIME       DATETIME PRIMARY KEY, "
-                               "         TEMPERATURE     NUMERIC,              "
-                               "         HUMIDITY        NUMERIC,              "
-                               "         PRESSURE        NUMERIC,              "
-                               "         WIND_SPEED      NUMERIC,              "
-                               "         WIND_DIRECTION  INTEGER,              "
-                               "         RAIN_INTENSITY  INTEGER               "
-                               "     )                                         ";
+            const auto command = " CREATE TABLE IF NOT EXISTS                    "
+                                 "     SENSORS_DATA (                            "
+                                 "         DATE_TIME       DATETIME PRIMARY KEY, "
+                                 "         TEMPERATURE     NUMERIC,              "
+                                 "         HUMIDITY        NUMERIC,              "
+                                 "         PRESSURE        NUMERIC,              "
+                                 "         WIND_SPEED      NUMERIC,              "
+                                 "         WIND_DIRECTION  INTEGER,              "
+                                 "         RAIN_INTENSITY  INTEGER               "
+                                 "     )                                         ";
 
-            const auto rc = sqlite3_exec( db, query, nullptr, nullptr, nullptr );
+            const auto rc = sqlite3_exec( db, command, nullptr, nullptr, nullptr );
             if ( rc != SQLITE_OK )
             {
                 log_e( "table create error: %s\n", sqlite3_errmsg( db ) );
-                std::abort();
+            }
+        }
+        {
+            const auto command = " PRAGMA journal_mode = OFF ";
+
+            const auto rc = sqlite3_exec( db, command, nullptr, nullptr, nullptr );
+            if ( rc != SQLITE_OK )
+            {
+                log_e( "prgma error: %s\n", sqlite3_errmsg( db ) );
             }
         }
         log_d( "end" );
@@ -69,23 +77,17 @@ namespace Database
         log_d("cleanup");
 
         const auto query = "DELETE FROM SENSORS_DATA "
-                           "WHERE DATE_TIME <= ?";
+                           "WHERE DATE_TIME < strftime('%s','now','-6 months')";
 
-        sqlite3_stmt* res;
-        const auto rc = sqlite3_prepare_v2( db, query, strlen( query ), &res, nullptr );
-        if ( rc != SQLITE_OK )
+        const auto rc = sqlite3_exec(db, query, nullptr, nullptr, nullptr);
+        if (rc != SQLITE_OK)
         {
-            log_e( "cleanup prepare error: %s", sqlite3_errmsg( db ) );
+            log_d("cleanup error: %s", sqlite3_errmsg( db ));
             return;
         }
 
-        sqlite3_bind_int64( res, 1, std::time(nullptr) - (45 * 24 * 60 * 60) );
-
-        if ( sqlite3_step( res ) != SQLITE_DONE )
-        {
-            log_e( "cleanup error: %s", sqlite3_errmsg( db ) );
-        }
-        sqlite3_finalize( res );
+        const auto deleted_rows = sqlite3_changes(db);
+        log_d("deleted rows = %d", deleted_rows);
     }
 
     static auto insert( const Infos::SensorData& sensorData ) -> void
@@ -139,7 +141,6 @@ namespace Database
             .rainIntensity = current.rainIntensity,
         };
 
-        cleanup();
         insert( average );
     }
 
@@ -172,10 +173,13 @@ namespace Database
     {
         Utils::bound( std::chrono::seconds( 10 ), Database::sample );
         Utils::bound( std::chrono::minutes( 15 ), Database::generate );
+        Utils::bound( std::chrono::hours( 24 ), Database::cleanup );
     }
 
     Filter::Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, uint32_t limit )
     {
+
+
         const auto query = " SELECT                                       "
                            "     DATE_TIME,                               "
                            "     TEMPERATURE,                             "
@@ -198,9 +202,12 @@ namespace Database
         {
             log_d( "select prepare error: %s", sqlite3_errmsg( db ) );
             this->res = nullptr;
+            this->count = 0;
         }
         else
         {
+            log_d( "select params: start %d / end %d / limit %d", std::chrono::system_clock::to_time_t( start ), std::chrono::system_clock::to_time_t( end ), limit );
+
             if ( start != std::chrono::system_clock::time_point::min() )
             {
                 sqlite3_bind_int64( this->res, 1, std::chrono::system_clock::to_time_t( start ) );
@@ -217,7 +224,10 @@ namespace Database
     Filter::Filter( Filter&& other )
     {
         this->res = other.res;
+        this->count = other.count;
+
         other.res = nullptr;
+        other.count = 0;
     }
 
     Filter::~Filter()
@@ -226,6 +236,7 @@ namespace Database
         {
             sqlite3_finalize( this->res );
             this->res = nullptr;
+            this->count = 0;
         }
     }
 
@@ -240,8 +251,13 @@ namespace Database
         {
             sqlite3_finalize( this->res );
             this->res = nullptr;
+            this->count = 0;
             return {};
         }
+
+        this->count += 1;
+
+        log_d("row count %d", this->count);
 
         return Infos::SensorData{
             .dateTime = static_cast<std::time_t>(sqlite3_column_int64( this->res, 0 )),

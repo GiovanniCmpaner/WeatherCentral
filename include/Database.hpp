@@ -15,7 +15,8 @@ namespace Database
     class Filter
     {
         private:
-            sqlite3_stmt* res;
+            sqlite3_stmt* res = nullptr;
+            uint32_t count = 0;
         public:
             Filter( std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, uint32_t limit );
             Filter( Filter& ) = delete;

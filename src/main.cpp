@@ -18,8 +18,8 @@
 void setup()
 {
     delay( 1000 );
-    //Serial.begin( 115200 );
-    //Serial.setDebugOutput( true );
+    Serial.begin( 115200 );
+    Serial.setDebugOutput( true );
 
     log_d( "begin" );
 
