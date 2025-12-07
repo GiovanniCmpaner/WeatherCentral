@@ -388,7 +388,7 @@ function createWindSpeedChart() {
 							ticks:
 							{
 								suggestedMin: 0,
-								suggestedMax: 30
+								suggestedMax: 20
 							}
 						}],
 					xAxes: [
