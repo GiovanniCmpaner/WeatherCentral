@@ -206,7 +206,7 @@ namespace Database
         }
         else
         {
-            log_d( "select params: start %d / end %d / limit %d", std::chrono::system_clock::to_time_t( start ), std::chrono::system_clock::to_time_t( end ), limit );
+            //log_d( "select params: start %d / end %d / limit %d", std::chrono::system_clock::to_time_t( start ), std::chrono::system_clock::to_time_t( end ), limit );
 
             if ( start != std::chrono::system_clock::time_point::min() )
             {
