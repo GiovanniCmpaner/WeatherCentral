@@ -257,8 +257,6 @@ namespace Database
 
         this->count += 1;
 
-        log_d("row count %d", this->count);
-
         return Infos::SensorData{
             .dateTime = static_cast<std::time_t>(sqlite3_column_int64( this->res, 0 )),
             .temperature = static_cast<float>(sqlite3_column_double( this->res, 1 )),
