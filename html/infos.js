@@ -7,8 +7,6 @@ $(document).ready(() => {
 let wsSensors;
 let wsLogs;
 let temperatureChart;
-let humidityChart;
-let pressureChart;
 let windSpeedChart;
 let windDirectionChart;
 

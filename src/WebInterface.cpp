@@ -380,11 +380,12 @@ namespace WebInterface
             _server->on( "/data.html", HTTP_GET, Get::handleDataHtml );
             _server->on( "/data.js", HTTP_GET, Get::handleDataJs );
             _server->on( "/data.csv", HTTP_GET, Get::handleDataCsv );
-            _server->on("/jquery.min.js", HTTP_GET, Get::handleJqueryMinJs);
-            _server->on("/chart.min.js", HTTP_GET, Get::handleChartMinJs);
+            _server->on( "/jquery.min.js", HTTP_GET, Get::handleJqueryMinJs);
+            _server->on( "/chart.min.js", HTTP_GET, Get::handleChartMinJs);
             _server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
             _server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
             _server->on( "/style.css", HTTP_GET, Get::handleStyleCss );
+            _server->on( "/", HTTP_GET, Get::handleInfosHtml );
 
             _server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
             _server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );

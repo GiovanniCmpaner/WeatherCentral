@@ -321,8 +321,8 @@ function createPressureChart() {
 						{
 							ticks:
 							{
-								suggestedMin: 900,
-								suggestedMax: 950
+								suggestedMin: 915,
+								suggestedMax: 935
 							}
 						}],
 					xAxes: [
