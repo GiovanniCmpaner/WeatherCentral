@@ -33,7 +33,7 @@ namespace WebInterface
     static std::chrono::system_clock::time_point _sensorsSendTimer = {};
     static std::chrono::system_clock::time_point _wsCleanupTimer = {};
 
-    static AsyncWebSocket _sensorsWs = {"/sensors.ws"};
+    static AsyncWebSocket _sensorsWs("/sensors.ws");
 
     namespace Get
     {

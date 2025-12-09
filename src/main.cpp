@@ -14,6 +14,7 @@
 #include "WebInterface.hpp"
 #include "Infos.hpp"
 #include "Utils.hpp"
+#include "Indicator.hpp"
 
 void setup()
 {
@@ -32,6 +33,7 @@ void setup()
     Database::init();
     WebInterface::init();
     Infos::init();
+    Indicator::init();
 
     log_d( "end" );
 }
@@ -42,4 +44,5 @@ void loop()
     Database::process();
     RealTime::process();
     WebInterface::process();
+    Indicator::process();
 }
