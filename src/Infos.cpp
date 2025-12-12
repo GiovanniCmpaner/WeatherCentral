@@ -45,6 +45,8 @@ namespace Infos
 
     auto init() -> void
     {
+        log_d( "begin" );
+
         if( not bme.begin() )
         {
             log_d( "bme error" );
@@ -62,6 +64,8 @@ namespace Infos
 
         rainIntensity.second.begin(Peripherals::RAIN_INTENSITY, false);
         rainIntensity.second.setAnalogResolution(4096);
+
+        log_d( "end" );
     }
 
     auto process() -> void

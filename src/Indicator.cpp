@@ -24,7 +24,7 @@ namespace Indicator
         {
             _temporizador = agora;
             _ligado = not _ligado;
-            digitalWrite(Peripherals::LED_HTB, _ligado);
+            //digitalWrite(Peripherals::LED_HTB, _ligado);
         }
     }
 
@@ -32,13 +32,13 @@ namespace Indicator
     {
         _rapido = false;
         _ligado = false;
-        digitalWrite(Peripherals::LED_HTB, LOW);
+        //digitalWrite(Peripherals::LED_HTB, LOW);
     }
 
     auto fast() -> void
     {
         _rapido = true;
         _ligado = false;
-        digitalWrite(Peripherals::LED_HTB, LOW);
+        //digitalWrite(Peripherals::LED_HTB, LOW);
     }
 }

@@ -40,7 +40,7 @@ namespace Peripherals
 
     enum Pins
     {
-        LED_HTB = 23,
+        //LED_HTB = 22,
 
         WIND_SPEED = 35,
         WIND_DIRECTION = 32,

@@ -310,7 +310,7 @@ namespace WebInterface
             request->send( response );
 
             delay( 3000 );
-            ESP.restart();
+            esp_restart();
         }
 
         auto handleFile(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) -> void

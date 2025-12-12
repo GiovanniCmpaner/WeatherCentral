@@ -17,12 +17,12 @@ namespace Peripherals
         pinMode( DS3231::SDA, INPUT_PULLUP );
         pinMode( DS3231::SCL, INPUT_PULLUP );
         pinMode( SD_CARD::SS, OUTPUT );
-        pinMode( LED_HTB, OUTPUT );
+        //pinMode( LED_HTB, OUTPUT );
         pinMode( WIND_SPEED, INPUT );
         pinMode( WIND_DIRECTION, INPUT );
         pinMode( RAIN_INTENSITY, INPUT );
 
-        digitalWrite( LED_HTB, LOW );
+        //digitalWrite( LED_HTB, LOW );
         digitalWrite( SD_CARD::SS, LOW );
 
         LittleFS.begin(true);
