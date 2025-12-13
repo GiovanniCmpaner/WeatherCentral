@@ -10,35 +10,31 @@ namespace Indicator
 {
     static auto _temporizador = std::chrono::system_clock::now();
     static auto _ligado = false;
-    static auto _rapido = false;
+    static auto _rapido = true;
 
     auto init() -> void
     {
-        // Nada
+        digitalWrite(Peripherals::LED_HTB, LOW);
     }
 
     auto process() -> void
     {
         const auto agora = std::chrono::system_clock::now();
-        if(agora - _temporizador >= std::chrono::milliseconds{_rapido ? 200 : _ligado ? 100 : 1500})
+        if(agora - _temporizador >= std::chrono::milliseconds{_ligado ? 100 : _rapido ? 300 : 3000})
         {
             _temporizador = agora;
             _ligado = not _ligado;
-            //digitalWrite(Peripherals::LED_HTB, _ligado);
+            digitalWrite(Peripherals::LED_HTB, _ligado);
         }
     }
 
     auto slow() -> void
     {
         _rapido = false;
-        _ligado = false;
-        //digitalWrite(Peripherals::LED_HTB, LOW);
     }
 
     auto fast() -> void
     {
         _rapido = true;
-        _ligado = false;
-        //digitalWrite(Peripherals::LED_HTB, LOW);
     }
 }

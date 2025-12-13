@@ -24,6 +24,7 @@
 #include "Utils.hpp"
 #include "Infos.hpp"
 #include "Files.hpp"
+#include "Indicator.hpp"
 
 namespace WebInterface
 {
@@ -457,6 +458,7 @@ namespace WebInterface
         }
 
         configureServer();
+        Indicator::fast();
         return true;
     }
 
@@ -503,6 +505,7 @@ namespace WebInterface
         }
 
         configureServer();
+        Indicator::fast();
         return true;
     }
 
@@ -549,30 +552,45 @@ namespace WebInterface
         }
 
         const auto now = std::chrono::system_clock::now();
+
         if( WiFi.softAPgetStationNum() > 0 )
         {
+            Indicator::slow();
             _modeTimer = now;
         }
-        else if( now - _modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
+        else 
         {
-            configureStation();
+            Indicator::fast();
+
+            if( now - _modeTimer > std::chrono::seconds( cfg.accessPoint.duration ) )
+            {
+                _modeTimer = now;
+                configureStation();
+            }
         }
     }
 
     static auto checkReconnect() -> void 
     {
-        if(WiFi.getMode() != WIFI_MODE_STA)
+        if(not cfg.station.enabled or WiFi.getMode() != WIFI_MODE_STA)
         {
             return;
         }
 
         const auto now = std::chrono::system_clock::now();
-        if( now - _reconnectTimer > std::chrono::seconds{30} )
-        {
-            _reconnectTimer = now;
 
-            if(not WiFi.isConnected())
+        if(WiFi.isConnected())
+        {
+            Indicator::slow();
+            _reconnectTimer = now;
+        }
+        else 
+        {
+            Indicator::fast();
+
+            if( now - _reconnectTimer > std::chrono::seconds{15} )
             {
+                _reconnectTimer = now;
                 WiFi.begin();
             }
         }
