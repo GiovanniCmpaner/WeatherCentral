@@ -78,6 +78,9 @@ namespace Infos
 
             bme.read( pressure, temperature, humidity, BME280::TempUnit_Celsius, BME280::PresUnit_hPa );
 
+            temperature *= 0.9141;
+            humidity *= 1.2201;
+
             windDirection.second.update();
             rainIntensity.second.update();
 
