@@ -36,6 +36,15 @@ static const Configuration defaultCfg
         .password = "W3@th3rC3ntr4l",
         .duration = 30
     },
+    .temperature = {
+        .factor = 0.901175,
+    },
+    .humidity= {
+        .factor = 1.263469,
+    },
+    .pressure = {
+        .factor = 1.0,
+    },
     .windSpeed = {
         .radius = 0.15,
     },
@@ -125,6 +134,15 @@ auto Configuration::serialize( ArduinoJson::JsonVariant& json ) const -> void
         json["station"]["password"] = this->station.password;
     }
     {
+        json["temperature"]["factor"] = this->temperature.factor;
+    }
+    {
+        json["humidity"]["factor"] = this->humidity.factor;
+    }
+    {
+        json["pressure"]["factor"] = this->pressure.factor;
+    }
+    {
         json["wind_speed"]["radius"] = this->windSpeed.radius;
     }
     {
@@ -194,6 +212,21 @@ auto Configuration::deserialize( const ArduinoJson::JsonVariant& json ) -> void
         this->accessPoint.user = json["access_point"]["user"] | "WeatherCentral";
         this->accessPoint.password = json["access_point"]["password"] | "W3@th3rC3ntr4l";
         this->accessPoint.duration = json["access_point"]["duration"] | 30;
+    }
+
+    if(json.containsKey("temperature"))
+    {
+        this->temperature.factor = json["temperature"]["factor"] | 1.0;
+    }
+
+    if(json.containsKey("humidity"))
+    {
+        this->humidity.factor = json["humidity"]["factor"] | 1.0;
+    }
+
+    if(json.containsKey("pressure"))
+    {
+        this->pressure.factor = json["pressure"]["factor"] | 1.0;
     }
 
     if(json.containsKey("wind_speed"))

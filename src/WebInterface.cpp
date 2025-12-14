@@ -15,6 +15,7 @@
 #include <Update.h>
 #include <esp_task_wdt.h>
 #include <rom/rtc.h>
+#include <future>
 
 #include "Configuration.hpp"
 #include "Database.hpp"
@@ -33,8 +34,17 @@ namespace WebInterface
     static std::chrono::system_clock::time_point _reconnectTimer = {};
     static std::chrono::system_clock::time_point _sensorsSendTimer = {};
     static std::chrono::system_clock::time_point _wsCleanupTimer = {};
+    static std::future<void> _futuroReinicio = {};
 
     static AsyncWebSocket _sensorsWs("/sensors.ws");
+
+    static auto reinicia() -> void {
+        _futuroReinicio = std::async(std::launch::async, []
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            esp_restart();
+        });
+    }
 
     namespace Get
     {
@@ -215,8 +225,8 @@ namespace WebInterface
                     return;
                 }
                 request->send(200, "text/plain", "Success, rebooting in 3 seconds");
-                delay(3000);
-                ESP.restart();
+
+                WebInterface::reinicia();
             }
         }
 
@@ -269,8 +279,8 @@ namespace WebInterface
                 file.close();
 
                 request->send(200, "text/plain", "Success, rebooting in 3 seconds");
-                delay(3000);
-                ESP.restart();
+                
+                WebInterface::reinicia();
             }
         }
     }
@@ -292,8 +302,7 @@ namespace WebInterface
             response->setLength();
             request->send( response );
 
-            delay( 3000 );
-            esp_restart();
+            WebInterface::reinicia();
         }
 
         static auto handleDateTimeJson( AsyncWebServerRequest* request, JsonVariant& requestJson ) -> void
@@ -310,8 +319,7 @@ namespace WebInterface
             response->setLength();
             request->send( response );
 
-            delay( 3000 );
-            esp_restart();
+            WebInterface::reinicia();
         }
 
         auto handleFile(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) -> void
@@ -326,7 +334,7 @@ namespace WebInterface
             }
             else
             {
-                request->send(404, "not found");
+                request->send(404, "text/plain", "file not found");
             }
         }
     } // namespace Post
@@ -407,7 +415,7 @@ namespace WebInterface
                 }
                 else
                 {
-                    request->send( 404 );
+                    request->send( 404, "text/plain", "page not found" );
                 }
             } );
             _server->begin();

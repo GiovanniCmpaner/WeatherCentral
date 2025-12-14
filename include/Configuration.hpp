@@ -51,6 +51,21 @@ struct Configuration
         uint16_t duration;
     };
 
+    struct Temperature 
+    {
+        float factor;
+    };
+
+    struct Humidity 
+    {
+        float factor;
+    };
+
+    struct Pressure 
+    {
+        float factor;
+    };
+
     struct WindSpeed
     {
         float radius;
@@ -68,6 +83,9 @@ struct Configuration
 
     Station station;
     AccessPoint accessPoint;
+    Temperature temperature;
+    Humidity humidity;
+    Pressure pressure;
     WindSpeed windSpeed;
     WindDirection windDirection;
     RainIntensity rainIntensity;

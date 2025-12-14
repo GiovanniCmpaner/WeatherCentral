@@ -36,6 +36,13 @@ function handleConfiguration() {
         }
     });
 
+    $("#atmosphere").submit((event) => {
+        event.preventDefault();
+        if ($("#atmosphere")[0].checkValidity()) {
+            setAtmosphere().then(() => clearMessage());
+        }
+    });
+
     $("#wind_speed").submit((event) => {
         event.preventDefault();
         if ($("#wind_speed")[0].checkValidity()) {
@@ -101,6 +108,21 @@ function setDateTime() {
         //    enableInput();
         //});
     return deferred.promise();
+}
+
+function setAtmosphere() {
+    var cfg = {
+        temperature: {
+            factor: parseFloat($("#temperature_factor").prop("value"))
+        },
+        humidity: {
+            factor: parseFloat($("#humidity_factor").prop("value"))
+        },
+        pressure: {
+            factor: parseFloat($("#pressure_factor").prop("value"))
+        }
+    };
+    return setConfiguration(cfg);
 }
 
 function setWindSpeed() {
@@ -241,6 +263,10 @@ function getConfiguration() {
             $("#station_port").prop("value", cfg.station.port);
             $("#station_user").prop("value", cfg.station.user);
             $("#station_password").prop("value", cfg.station.password);
+
+            $("#temperature_factor").prop("value", cfg.temperature.factor.toFixed(3));
+            $("#humidity_factor").prop("value", cfg.humidity.factor.toFixed(3));
+            $("#pressure_factor").prop("value", cfg.pressure.factor.toFixed(3));
 
             $("#wind_speed_radius").prop("value", cfg.wind_speed.radius.toFixed(2));
 
