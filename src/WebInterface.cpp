@@ -41,7 +41,7 @@ namespace WebInterface
     static auto reinicia() -> void {
         _futuroReinicio = std::async(std::launch::async, []
         {
-            std::this_thread::sleep_for(std::chrono::seconds(3));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             esp_restart();
         });
     }
@@ -125,16 +125,7 @@ namespace WebInterface
                         return len;
                     }
 
-                    const auto written = snprintf(rowBuf.data(), rowBuf.size(),
-                        "%s;%.1f;%.1f;%.1f;%.1f;%s;%s\r\n",
-                        Utils::DateTime::toString(std::chrono::system_clock::from_time_t(sensorData->dateTime)).c_str(),
-                        sensorData->temperature,
-                        sensorData->humidity,
-                        sensorData->pressure,
-                        sensorData->windSpeed,
-                        Utils::WindDirection::getName(sensorData->windDirection).c_str(),
-                        Utils::RainIntensity::getName(sensorData->rainIntensity).c_str()
-                    );
+                    const auto written = sensorData->serialize(rowBuf);
 
                     memcpy(buffer + len, rowBuf.data(), written);
                     len += written;
@@ -224,9 +215,7 @@ namespace WebInterface
                     request->send(500, "text/plain", Update.errorString());
                     return;
                 }
-                request->send(200, "text/plain", "Success, rebooting in 3 seconds");
-
-                WebInterface::reinicia();
+                request->send(200, "text/plain", "Success, rebooting");
             }
         }
 
@@ -278,7 +267,7 @@ namespace WebInterface
             {
                 file.close();
 
-                request->send(200, "text/plain", "Success, rebooting in 3 seconds");
+                request->send(200, "text/plain", "Success, rebooting");
                 
                 WebInterface::reinicia();
             }
@@ -287,6 +276,13 @@ namespace WebInterface
 
     namespace Post
     {
+        static auto handleFirmwareBin(AsyncWebServerRequest *request) -> void 
+        {
+            request->send(200, "text/plain", "Success, rebooting");
+            
+            WebInterface::reinicia();
+        }
+
         static auto handleConfigurationJson( AsyncWebServerRequest* request, JsonVariant& requestJson ) -> void
         {
             log_d("POST /configuration.json");
@@ -298,7 +294,7 @@ namespace WebInterface
             newCfg.deserialize( requestJson );
             Configuration::save( newCfg );
 
-            responseJson.set( "Configuration saved, restarting in 3 seconds" );
+            responseJson.set( "Configuration saved, rebooting" );
             response->setLength();
             request->send( response );
 
@@ -315,7 +311,7 @@ namespace WebInterface
             const auto dateTime{Utils::DateTime::fromString( requestJson.as<std::string>() )};
             RealTime::adjustDateTime( dateTime );
 
-            responseJson.set( "DateTime saved, restarting in 3 seconds" );
+            responseJson.set( "DateTime saved, rebooting" );
             response->setLength();
             request->send( response );
 
@@ -382,6 +378,7 @@ namespace WebInterface
 
         if ( _server )
         {
+            _server->on( "/", HTTP_GET, Get::handleInfosHtml );
             _server->on( "/configuration.json", HTTP_GET, Get::handleConfigurationJson );
             _server->on( "/datetime.json", HTTP_GET, Get::handleDateTimeJson );
             _server->on( "/configuration.html", HTTP_GET, Get::handleConfigurationHtml );
@@ -394,11 +391,10 @@ namespace WebInterface
             _server->on( "/infos.html", HTTP_GET, Get::handleInfosHtml );
             _server->on( "/infos.js", HTTP_GET, Get::handleInfosJs );
             _server->on( "/style.css", HTTP_GET, Get::handleStyleCss );
-            _server->on( "/", HTTP_GET, Get::handleInfosHtml );
 
-            _server->addHandler( new AsyncCallbackJsonWebHandler( "/configuration.json", Post::handleConfigurationJson, 2048 ) );
-            _server->addHandler( new AsyncCallbackJsonWebHandler( "/datetime.json", Post::handleDateTimeJson, 1024 ) );
-            _server->onFileUpload( Post::handleFile );
+            _server->on( "/firmware.bin", HTTP_POST, Post::handleFirmwareBin, File::handleFirmwareBin );
+            _server->on( "/configuration.json", HTTP_POST, Post::handleConfigurationJson );
+            _server->on( "/datetime.json", HTTP_POST, Post::handleDateTimeJson );
 
             _sensorsWs.onEvent(WebSocket::handleDefaultWs);
             _server->addHandler(&_sensorsWs);

@@ -78,10 +78,6 @@ namespace Infos
 
             bme.read( pressure, temperature, humidity, BME280::TempUnit_Celsius, BME280::PresUnit_hPa );
 
-            temperature *= cfg.temperature.factor;
-            humidity *= cfg.humidity.factor;
-            pressure *= cfg.pressure.factor;
-
             windDirection.second.update();
             rainIntensity.second.update();
 
@@ -108,12 +104,26 @@ namespace Infos
     auto SensorData::serialize( ArduinoJson::JsonVariant& json ) const -> void
     {
         json["datetime"] = Utils::DateTime::toString( std::chrono::system_clock::from_time_t( this->dateTime ) );
-        json["temperature"] = this->temperature;
-        json["humidity"] = this->humidity;
-        json["pressure"] = this->pressure;
+        json["temperature"] = this->temperature * cfg.temperature.factor;
+        json["humidity"] = this->humidity * cfg.humidity.factor;
+        json["pressure"] = this->pressure * cfg.pressure.factor;
         json["wind_speed"] = this->windSpeed;
         json["wind_direction"] = Utils::WindDirection::getName(this->windDirection);
         json["rain_intensity"] = Utils::RainIntensity::getName(this->rainIntensity);
+    }
+
+    auto SensorData::serialize( std::array<char, 100>& row ) const -> int
+    {
+        return snprintf(row.data(), row.size(),
+            "%s;%.1f;%.1f;%.1f;%.1f;%s;%s\r\n",
+            Utils::DateTime::toString(std::chrono::system_clock::from_time_t(this->dateTime)).c_str(),
+            this->temperature * cfg.temperature.factor,
+            this->humidity * cfg.humidity.factor,
+            this->pressure * cfg.pressure.factor,
+            this->windSpeed,
+            Utils::WindDirection::getName(this->windDirection).c_str(),
+            Utils::RainIntensity::getName(this->rainIntensity).c_str()
+        );
     }
 
     auto SensorData::get() -> SensorData

@@ -19,6 +19,7 @@ namespace Infos
 
         static auto get() -> SensorData;
         auto serialize ( ArduinoJson::JsonVariant& json ) const -> void;
+        auto serialize ( std::array<char, 100>& row ) const -> int;
     };
 
     auto init() -> void;
