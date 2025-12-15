@@ -41,7 +41,7 @@ namespace WebInterface
     static auto reinicia() -> void {
         _futuroReinicio = std::async(std::launch::async, []
         {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(3));
             esp_restart();
         });
     }
@@ -279,7 +279,7 @@ namespace WebInterface
         static auto handleFirmwareBin(AsyncWebServerRequest *request) -> void 
         {
             request->send(200, "text/plain", "Success, rebooting");
-            
+
             WebInterface::reinicia();
         }
 
