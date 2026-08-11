@@ -23,7 +23,7 @@ static const Configuration defaultCfg
         .gateway = {192, 168, 1, 1},
         .port = 80,
         .user = "WORKGROUP",
-        .password = "49WNN7F3CD@22"
+        .password = "49wnn7F3CD@22"
     },
     .accessPoint = {
         .enabled = false,
